@@ -1,0 +1,11 @@
+@AutoGarage.Api_HostAddress = http://localhost:5244
+
+# Get all services
+GET {{AutoGarage.Api_HostAddress}}/api/services
+Accept: application/json
+
+###
+
+# Get service by id
+GET {{AutoGarage.Api_HostAddress}}/api/services/1
+Accept: application/json
