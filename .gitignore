@@ -69,3 +69,8 @@ nunit-*.xml
 # OS
 .DS_Store
 Thumbs.db
+
+# TerraForm
+infra/.terraform*
+infra/terraform.tfstate*
+infra/*.tfvars
