@@ -74,3 +74,6 @@ Thumbs.db
 infra/.terraform*
 infra/terraform.tfstate*
 infra/*.tfvars
+
+# Local test scripts
+/scripts
