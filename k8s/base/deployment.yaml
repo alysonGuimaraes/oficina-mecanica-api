@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autogarage-api-deployment
+  labels:
+    app: autogarage-api
+spec:
+  selector:
+    matchLabels:
+      app: autogarage-api
+  template:
+    metadata:
+      labels:
+        app: autogarage-api
+    spec:
+      containers:
+      - name: autogarage-api
+        image: autogarage-api-image
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: autogarage-api-config
+        - secretRef:
+            name: autogarage-api-secrets
+        readinessProbe:
+          httpGet:
+            path: /api/Service
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /api/Service
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 2
+          failureThreshold: 3
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+      volumes:
+      - name: tmp
+        emptyDir: {}
