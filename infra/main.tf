@@ -154,10 +154,18 @@ resource "google_secret_manager_secret_iam_member" "secret_accessor" {
   secret_id = google_secret_manager_secret.db_password_secret.id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.external_secrets_sa.email}"
+
+  depends_on = [
+    google_container_cluster.primary_cluster
+  ]
 }
 
 resource "google_service_account_iam_member" "workload_identity_binding" {
   service_account_id = google_service_account.external_secrets_sa.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "serviceAccount:${var.project_id}.svc.id.goog[default/external-secrets-sa]"
+
+  depends_on = [
+    google_container_cluster.primary_cluster
+  ]
 }
