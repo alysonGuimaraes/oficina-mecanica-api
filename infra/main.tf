@@ -84,6 +84,13 @@ resource "google_service_networking_connection" "private_vpc_connection" {
   network                 = google_compute_network.main_vpc.id
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
+
+  # Destroy the peering before the subnets, otherwise GCP refuses to remove the
+  # Service Networking Connection while the VPC is still in use.
+  depends_on = [
+    google_compute_subnetwork.public_subnet,
+    google_compute_subnetwork.private_subnet
+  ]
 }
 
 resource "google_sql_database_instance" "postgres_instance" {
