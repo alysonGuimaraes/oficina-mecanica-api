@@ -23,6 +23,26 @@ resource "google_compute_subnetwork" "private_subnet" {
   private_ip_google_access = true
 }
 
+# Cloud Router + Cloud NAT (outbound internet for private nodes)
+resource "google_compute_router" "nat_router" {
+  name    = "autogarage-nat-router"
+  region  = var.region
+  network = google_compute_network.main_vpc.id
+}
+
+resource "google_compute_router_nat" "nat" {
+  name                               = "autogarage-nat"
+  router                             = google_compute_router.nat_router.name
+  region                             = var.region
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+
+  depends_on = [
+    google_compute_subnetwork.public_subnet,
+    google_compute_subnetwork.private_subnet
+  ]
+}
+
 # ==========================================
 # 2. ARTIFACT REGISTRY
 # ==========================================
