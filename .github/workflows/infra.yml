@@ -91,6 +91,9 @@ jobs:
           cluster_name: ${{ env.CLUSTER }}
           location: ${{ env.REGION }}
 
+      - name: Wait for nodes to be ready
+        run: kubectl wait --for=condition=Ready nodes --all --timeout=5m
+
       - name: Setup Helm
         uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
 
@@ -99,4 +102,5 @@ jobs:
           helm repo add external-secrets https://charts.external-secrets.io
           helm repo update
           helm upgrade --install external-secrets external-secrets/external-secrets \
-            --namespace external-secrets --create-namespace --wait
+            --namespace external-secrets --create-namespace \
+            --timeout 10m --wait
