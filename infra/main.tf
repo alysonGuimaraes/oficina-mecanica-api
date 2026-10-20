@@ -85,8 +85,12 @@ resource "google_service_networking_connection" "private_vpc_connection" {
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
 
-  # Destroy the peering before the subnets, otherwise GCP refuses to remove the
-  # Service Networking Connection while the VPC is still in use.
+  # If the API refuses to delete the connection because a producer (e.g. a
+  # just-deleted Cloud SQL instance) still references it, remove the VPC peering
+  # instead so the network and subnets can be destroyed without manual steps.
+  deletion_policy = "REMOVE_PEERING"
+
+  # Tear the peering down before the subnets/network.
   depends_on = [
     google_compute_subnetwork.public_subnet,
     google_compute_subnetwork.private_subnet
