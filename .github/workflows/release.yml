@@ -1,18 +1,25 @@
 name: Release
 
-# Triggered by a version tag (e.g. v0.1.0). Builds and pushes the image with the
-# exact tag, then updates the deployment in the GKE cluster.
+# Triggered by a version tag (e.g. v0.1.0) or manually for a specific tag
+# (useful to roll back / redeploy a previous version). Validates the build,
+# publishes the image to Artifact Registry and deploys it to GKE. The deploy
+# job runs under the "production" environment, so it waits for manual approval.
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build and deploy (e.g. v0.1.0)"
+        required: true
 
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: release-${{ github.ref_name }}
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 env:
@@ -21,14 +28,107 @@ env:
   REPO: autogarage-api-repo
   IMAGE_NAME: autogarage-api
   OVERLAY: k8s/overlays/production
+  SOLUTION: src/AutoGarage.slnx
+  # Tag being released and the git ref to check out (tag push uses ref_name/ref).
+  VERSION: ${{ github.event.inputs.tag || github.ref_name }}
+  REF: ${{ github.event.inputs.tag || github.ref }}
 
 jobs:
-  release:
-    name: Build, push and deploy
+  # Resolve the target image and decide whether it still needs to be built.
+  # Tags are treated as immutable history: if the image already exists in
+  # Artifact Registry, build and push are skipped to avoid rewriting it.
+  check:
+    name: Check image
+    runs-on: ubuntu-latest
+    outputs:
+      image_exists: ${{ steps.image_exists.outputs.image_exists }}
+      image_uri: ${{ steps.meta.outputs.image_uri }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+
+      - name: Resolve image URI
+        id: meta
+        run: |
+          echo "image_uri=$REGION-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/$REPO/$IMAGE_NAME:$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if the image already exists
+        id: image_exists
+        run: |
+          if gcloud artifacts docker images describe "${{ steps.meta.outputs.image_uri }}" >/dev/null 2>&1; then
+            echo "image_exists=true" >> "$GITHUB_OUTPUT"
+            echo "Image already exists; build and push will be skipped."
+          else
+            echo "image_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Summary
+        run: |
+          {
+            echo "## Release $VERSION"
+            echo "- Image: \`${{ steps.meta.outputs.image_uri }}\`"
+            echo "- Already in Artifact Registry: ${{ steps.image_exists.outputs.image_exists }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Validate compilation and produce the container image as an artifact.
+  build:
+    name: Validate and build image
+    needs: check
+    if: needs.check.outputs.image_exists != 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ env.REF }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore "$SOLUTION"
+
+      - name: Format check
+        run: dotnet format "$SOLUTION" --verify-no-changes --severity warn
+
+      - name: Build
+        run: dotnet build "$SOLUTION" --no-restore -c Release
+
+      - name: Test
+        run: dotnet test "$SOLUTION" --no-build -c Release
+
+      - name: Build container image
+        run: docker build -t "${{ needs.check.outputs.image_uri }}" .
+
+      - name: Save image
+        run: docker save "${{ needs.check.outputs.image_uri }}" -o image.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ${{ env.IMAGE_NAME }}
+          path: image.tar
+          retention-days: 1
+
+  # Publish the built image to Artifact Registry.
+  push:
+    name: Push image
+    needs: [check, build]
+    if: needs.check.outputs.image_exists != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ env.IMAGE_NAME }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
@@ -42,12 +142,31 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
 
-      - name: Build and push image
+      - name: Load and push image
         run: |
-          IMAGE_URI="$REGION-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/$REPO/$IMAGE_NAME:${GITHUB_REF_NAME}"
-          docker build -t "$IMAGE_URI" .
-          docker push "$IMAGE_URI"
-          echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"
+          docker load -i image.tar
+          docker push "${{ needs.check.outputs.image_uri }}"
+
+  # Update the deployment in the GKE cluster. Runs whether the image was just
+  # published or reused. Gated by the "production" environment (configure
+  # required reviewers to force a manual approval).
+  deploy:
+    name: Deploy to GKE
+    needs: [check, build, push]
+    if: always() && (needs.check.outputs.image_exists == 'true' || needs.push.result == 'success')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ env.REF }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@3da1e46a907576cefaa90c484278bb5b259dd395
@@ -66,7 +185,7 @@ jobs:
         run: printf '%s\n' "$RUNTIME_CONFIG" > "$OVERLAY/runtime-config.env"
 
       - name: Pin image in the overlay
-        run: kustomize edit set image autogarage-api-image="$IMAGE_URI" --kustomize-dir "$OVERLAY"
+        run: kustomize edit set image autogarage-api-image="${{ needs.check.outputs.image_uri }}" --kustomize-dir "$OVERLAY"
 
       - name: Deploy
         run: |
