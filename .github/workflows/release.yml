@@ -93,6 +93,14 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
+      - name: Inspect .NET environment
+        run: |
+          dotnet --info
+          dotnet --list-sdks
+          dotnet nuget list source
+          echo "SOLUTION=$SOLUTION"
+          ls -la
+
       - name: Restore
         run: dotnet restore "$SOLUTION" --verbosity diagnostic
 
