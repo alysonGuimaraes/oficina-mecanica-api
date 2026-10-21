@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  REGION: southamerica-east1
+  REGION: vars.GCP_REGION
   CLUSTER: autogarage-k8s-cluster
   REPO: autogarage-api-repo
   IMAGE_NAME: autogarage-api
