@@ -94,7 +94,7 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Restore
-        run: dotnet restore "$SOLUTION"
+        run: dotnet restore "$SOLUTION" --verbosity diagnostic
 
       - name: Format check
         run: dotnet format "$SOLUTION" --verify-no-changes --severity warn
