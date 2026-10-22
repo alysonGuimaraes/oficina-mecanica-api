@@ -159,7 +159,7 @@ resource "google_container_node_pool" "primary_nodes" {
   }
 
   node_config {
-    machine_type = "e2-small"
+    machine_type = "e2-medium"
 
     boot_disk {
       size_gb = 20

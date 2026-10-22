@@ -200,3 +200,24 @@ jobs:
         run: |
           kubectl apply -k "$OVERLAY"
           kubectl rollout status deployment/autogarage-api-deployment --timeout=180s
+
+      - name: Debug rollout failure
+        if: failure()
+        run: |
+          set +e
+          echo "=== pods ==="
+          kubectl get pods -n default -o wide
+          echo "=== deployment ==="
+          kubectl describe deployment/autogarage-api-deployment -n default
+          echo "=== events ==="
+          kubectl get events -n default --sort-by=.lastTimestamp | tail -n 40
+          echo "=== pod describe ==="
+          kubectl describe pods -n default -l app=autogarage-api
+          echo "=== pod logs ==="
+          kubectl logs -n default -l app=autogarage-api --all-containers --tail=200
+          echo "=== externalsecret / secretstore ==="
+          kubectl get externalsecret,secretstore -n default -o yaml
+          echo "=== external-secrets pods ==="
+          kubectl get pods -n external-secrets -o wide
+          echo "=== external-secrets logs ==="
+          kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --tail=200

@@ -1,6 +1,6 @@
 # Stage 1: Base runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER app
+USER 1654
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
