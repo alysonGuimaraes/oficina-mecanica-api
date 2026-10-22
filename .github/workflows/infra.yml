@@ -28,6 +28,7 @@ env:
   TF_IN_AUTOMATION: "true"
   TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
   TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+  TF_VAR_region: ${{ vars.GCP_REGION }}
 
 jobs:
   terraform:
@@ -73,7 +74,7 @@ jobs:
     if: ${{ github.event.inputs.action == 'apply' }}
     runs-on: ubuntu-latest
     env:
-      REGION: southamerica-east1
+      REGION: ${{ vars.GCP_REGION }
       CLUSTER: autogarage-k8s-cluster
     steps:
       - name: Checkout
