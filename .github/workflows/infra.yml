@@ -74,7 +74,7 @@ jobs:
     if: ${{ github.event.inputs.action == 'apply' }}
     runs-on: ubuntu-latest
     env:
-      REGION: ${{ vars.GCP_REGION }
+      REGION: ${{ vars.GCP_REGION }}
       CLUSTER: autogarage-k8s-cluster
     steps:
       - name: Checkout
