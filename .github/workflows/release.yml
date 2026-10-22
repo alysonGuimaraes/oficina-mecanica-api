@@ -42,7 +42,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image_exists: ${{ steps.image_exists.outputs.image_exists }}
-      image_uri: ${{ steps.meta.outputs.image_uri }}
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
@@ -106,10 +105,14 @@ jobs:
         run: dotnet test "$SOLUTION" --no-build -c Release
 
       - name: Build container image
-        run: docker build -t "${{ needs.check.outputs.image_uri }}" .
+        env:
+          IMAGE_URI: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+        run: docker build -t "$IMAGE_URI" .
 
       - name: Save image
-        run: docker save "${{ needs.check.outputs.image_uri }}" -o image.tar
+        env:
+          IMAGE_URI: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+        run: docker save "$IMAGE_URI" -o image.tar
 
       - name: Upload image artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
@@ -143,9 +146,11 @@ jobs:
         run: gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
 
       - name: Load and push image
+        env:
+          IMAGE_URI: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
         run: |
           docker load -i image.tar
-          docker push "${{ needs.check.outputs.image_uri }}"
+          docker push "$IMAGE_URI"
 
   # Update the deployment in the GKE cluster. Runs whether the image was just
   # published or reused. Gated by the "production" environment (configure
@@ -185,7 +190,9 @@ jobs:
         run: printf '%s\n' "$RUNTIME_CONFIG" > "$OVERLAY/runtime-config.env"
 
       - name: Pin image in the overlay
-        run: kustomize edit set image autogarage-api-image="${{ needs.check.outputs.image_uri }}" --kustomize-dir "$OVERLAY"
+        env:
+          IMAGE_URI: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+        run: kustomize edit set image autogarage-api-image="$IMAGE_URI" --kustomize-dir "$OVERLAY"
 
       - name: Deploy
         run: |
