@@ -192,7 +192,9 @@ jobs:
       - name: Pin image in the overlay
         env:
           IMAGE_URI: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-        run: kustomize edit set image autogarage-api-image="$IMAGE_URI" --kustomize-dir "$OVERLAY"
+        run: |
+          cd "$OVERLAY"
+          kustomize edit set image autogarage-api-image="$IMAGE_URI"
 
       - name: Deploy
         run: |
