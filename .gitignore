@@ -77,3 +77,6 @@ infra/*.tfvars
 
 # Local test scripts
 /scripts
+
+# local plans for IA
+/IAdocs
