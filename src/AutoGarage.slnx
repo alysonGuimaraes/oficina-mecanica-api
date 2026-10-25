@@ -1,3 +1,7 @@
 <Solution>
+  <Project Path="../tests/AutoGarage.UnitTests/AutoGarage.UnitTests.csproj" />
   <Project Path="AutoGarage.Api/AutoGarage.Api.csproj" />
+  <Project Path="AutoGarage.Application/AutoGarage.Application.csproj" />
+  <Project Path="AutoGarage.Domain/AutoGarage.Domain.csproj" />
+  <Project Path="AutoGarage.Infrastructure/AutoGarage.Infrastructure.csproj" />
 </Solution>
