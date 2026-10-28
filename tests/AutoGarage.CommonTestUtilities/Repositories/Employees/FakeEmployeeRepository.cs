@@ -35,6 +35,11 @@ public class FakeEmployeeRepository : IEmployeeReadOnlyRepository, IEmployeeWrit
         return Task.FromResult(ordered);
     }
 
+    public Task<Employee?> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(_employees.FirstOrDefault(e => e.Id == id));
+    }
+
     public Task Add(Employee employee, CancellationToken cancellationToken)
     {
         _employees.Add(employee);

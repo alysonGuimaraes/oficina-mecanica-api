@@ -28,6 +28,13 @@ public class EmployeeRepository : IEmployeeReadOnlyRepository, IEmployeeWriteOnl
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Employee?> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.Employees
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+    }
+
     public async Task Add(Employee employee, CancellationToken cancellationToken)
     {
         await _context.Employees.AddAsync(employee, cancellationToken);

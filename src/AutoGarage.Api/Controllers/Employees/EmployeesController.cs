@@ -1,5 +1,6 @@
 ﻿using AutoGarage.Application.Commands.Employees;
 using AutoGarage.Application.UseCases.Employees.CreateEmployee;
+using AutoGarage.Application.UseCases.Employees.GetEmployeeById;
 using AutoGarage.Application.UseCases.Employees.ListEmployees;
 using AutoGarage.Communication.Requests.Employees;
 using AutoGarage.Communication.Responses.Employees;
@@ -40,6 +41,18 @@ public class EmployeesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await useCase.Handle(cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(EmployeeResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<EmployeeResponse>> GetById(
+        [FromRoute] string id,
+        [FromServices] IGetEmployeeByIdUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(id, cancellationToken);
 
         return Ok(result);
     }
