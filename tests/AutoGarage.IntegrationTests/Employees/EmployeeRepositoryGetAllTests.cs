@@ -1,25 +1,21 @@
 using AutoGarage.CommonTestUtilities.Entities;
+using AutoGarage.Domain.Entities;
+using AutoGarage.Domain.Shared;
 using AutoGarage.Infrastructure.Persistence;
 using AutoGarage.Infrastructure.Persistence.Repositories;
-using AutoGarage.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
 namespace AutoGarage.IntegrationTests.Employees;
 
-public class EmployeeRepositoryGetAllTests : IClassFixture<PostgresFixture>
+public class EmployeeRepositoryGetAllTests
 {
-    private readonly PostgresFixture _fixture;
-
-    public EmployeeRepositoryGetAllTests(PostgresFixture fixture)
-    {
-        _fixture = fixture;
-    }
+    private readonly string _databaseName = Guid.NewGuid().ToString();
 
     [Fact]
     public async Task GetAll_EmptyTable_ShouldReturnEmptyList()
     {
-        await using var context = await CreateCleanContextAsync();
+        await using var context = CreateContext();
         var repository = new EmployeeRepository(context);
 
         var result = await repository.GetAll(CancellationToken.None);
@@ -30,54 +26,53 @@ public class EmployeeRepositoryGetAllTests : IClassFixture<PostgresFixture>
     [Fact]
     public async Task GetAll_ActiveAndInactive_ShouldReturnBoth()
     {
-        await using var context = await CreateCleanContextAsync();
         var active = EmployeeBuilder.Build("active@autogarage.com");
         var inactive = EmployeeBuilder.Build("inactive@autogarage.com");
         inactive.Deactivate();
-        context.Employees.AddRange(active, inactive);
-        await context.SaveChangesAsync();
+        await SaveAsync(active, inactive);
 
-        await using var readContext = AppDbContextFactory();
-        var repository = new EmployeeRepository(readContext);
+        await using var context = CreateContext();
+        var repository = new EmployeeRepository(context);
 
         var result = await repository.GetAll(CancellationToken.None);
 
         result.Count.ShouldBe(2);
-        result.ShouldContain(employee => employee.Status == AutoGarage.Domain.Shared.EntityStatus.ACTIVE);
-        result.ShouldContain(employee => employee.Status == AutoGarage.Domain.Shared.EntityStatus.INACTIVE);
+        result.ShouldContain(employee => employee.Status == EntityStatus.ACTIVE);
+        result.ShouldContain(employee => employee.Status == EntityStatus.INACTIVE);
     }
 
     [Fact]
     public async Task GetAll_SameCreatedAt_ShouldOrderByIdAscending()
     {
-        await using var context = await CreateCleanContextAsync();
         var first = EmployeeBuilder.Build("first@autogarage.com");
         var second = EmployeeBuilder.Build("second@autogarage.com");
-        context.Employees.AddRange(first, second);
-        await context.SaveChangesAsync();
-
         var sameCreatedAt = DateTime.UtcNow;
-        await context.Database.ExecuteSqlAsync($"UPDATE employees SET \"CreatedAt\" = {sameCreatedAt}");
 
-        // A ordem esperada vem do próprio PostgreSQL: uuid ordena por bytes, diferente de Guid.CompareTo.
-        var expectedIds = await context.Database
-            .SqlQuery<Guid>($"SELECT \"Id\" FROM employees ORDER BY \"Id\"")
-            .ToListAsync();
+        await using (var setupContext = CreateContext())
+        {
+            setupContext.Employees.AddRange(first, second);
+            setupContext.Entry(first).Property(nameof(Employee.CreatedAt)).CurrentValue = sameCreatedAt;
+            setupContext.Entry(second).Property(nameof(Employee.CreatedAt)).CurrentValue = sameCreatedAt;
+            await setupContext.SaveChangesAsync();
+        }
 
-        await using var readContext = AppDbContextFactory();
-        var repository = new EmployeeRepository(readContext);
+        await using var context = CreateContext();
+        var repository = new EmployeeRepository(context);
 
         var result = await repository.GetAll(CancellationToken.None);
+
+        var expectedIds = new[] { first.Id, second.Id }.OrderBy(id => id).ToList();
 
         result.Select(employee => employee.Id).ShouldBe(expectedIds);
     }
 
-    private async Task<AppDbContext> CreateCleanContextAsync()
-    {
-        var context = AppDbContextFactory();
-        await context.Database.ExecuteSqlRawAsync("DELETE FROM employees");
-        return context;
-    }
+    private AppDbContext CreateContext() =>
+        new(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(_databaseName).Options);
 
-    private AppDbContext AppDbContextFactory() => PostgresFixture.CreateContext(_fixture.ConnectionString);
+    private async Task SaveAsync(params Employee[] employees)
+    {
+        await using var context = CreateContext();
+        context.Employees.AddRange(employees);
+        await context.SaveChangesAsync();
+    }
 }

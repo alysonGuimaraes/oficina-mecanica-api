@@ -23,10 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AutoGarage.Application\AutoGarage.Application.csproj" />
     <ProjectReference Include="..\..\src\AutoGarage.Domain\AutoGarage.Domain.csproj" />
-    <ProjectReference Include="..\..\src\Shared\AutoGarage.Communication\AutoGarage.Communication.csproj" />
-    <ProjectReference Include="..\AutoGarage.CommonTestUtilities\AutoGarage.CommonTestUtilities.csproj" />
   </ItemGroup>
 
   <ItemGroup>

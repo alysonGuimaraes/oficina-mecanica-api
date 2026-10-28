@@ -17,9 +17,13 @@ src/AutoGarage.slnx
 │   ├── AutoGarage.Api             # Apresentação - Controllers, ExceptionHandler, Program.cs
 │   └── Shared/AutoGarage.Communication  # Contratos HTTP (Requests/Responses) compartilhados
 └── tests/
-    ├── AutoGarage.CommonTestUtilities  # Builders, fakes e helpers para os testes
-    └── AutoGarage.UnitTests            # Testes unitários (Domain e Application)
+    ├── AutoGarage.CommonTestUtilities      # Builders, fakes e helpers para os testes
+    ├── AutoGarage.Domain.UnitTests         # Testes unitários do Domain
+    ├── AutoGarage.Application.UnitTests    # Testes unitários dos casos de uso (Application)
+    └── AutoGarage.IntegrationTests         # Testes de integração do repositório (EF Core InMemory)
 ```
+
+Todos os projetos de teste ficam na pasta `/tests/` da solução. Os testes não dependem de banco externo nem de Docker.
 
 ## Direção de Dependências
 
@@ -144,7 +148,7 @@ Esta tabela lista o que está em uso. Pacotes referenciados mas ainda sem uso es
 | **Application** | FluentValidation, Mapster |
 | **Infrastructure** | Entity Framework Core 10, Npgsql.EntityFrameworkCore.PostgreSQL, FluentMigrator, Dapper (criação do banco na inicialização). Referenciado, sem uso ainda: Microsoft.AspNetCore.Identity |
 | **Domain** | Puro C# (sem dependências externas) |
-| **Testes** | xUnit, Shouldly, Bogus (dados de teste), coverlet.collector |
+| **Testes** | xUnit 2.9.3, Shouldly, Bogus (dados de teste), Microsoft.EntityFrameworkCore.InMemory (integração sem banco externo), coverlet.collector |
 
 ## Decisões de arquitetura
 
@@ -159,3 +163,4 @@ Registro das divergências entre a regra desejada e o código, com a decisão to
 | 5 | Validação de nome e e-mail fora do `Domain` (`Employee.Create` valida só o role) | Mantida na Application. A entidade valida apenas invariantes de estado. | Decidido |
 | 6 | `ExceptionHandler` não registra em log os erros inesperados | Adicionar `ILogger` no handler. | **Pendente** |
 | 7 | `ErrorOnValidationException` em `Domain/Common/Exceptions/` | Mantida no `Domain`, por legibilidade e entendimento do código. | Decidido |
+| 8 | Banco usado pelos testes de integração do repositório | Testes de integração rodam com EF Core InMemory, sem banco externo nem Docker. Consequência: a ordenação de `uuid` do PostgreSQL e a unicidade do índice de e-mail não são cobertas por teste automatizado. | Decidido |

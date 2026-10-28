@@ -5,7 +5,7 @@ using AutoGarage.CommonTestUtilities.Repositories.Employees;
 using AutoGarage.Domain.Shared;
 using Shouldly;
 
-namespace AutoGarage.UnitTests.Application.UseCases.Employees.ListEmployees;
+namespace AutoGarage.Application.UnitTests.UseCases.Employees.ListEmployees;
 
 public class ListEmployeesUseCaseTests
 {

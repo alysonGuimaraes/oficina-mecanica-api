@@ -11,7 +11,7 @@ using AutoGarage.Domain.Exceptions.Employees.Exceptions;
 using AutoGarage.Domain.Shared;
 using Shouldly;
 
-namespace AutoGarage.UnitTests.Application.UseCases.Employees.CreateEmployee;
+namespace AutoGarage.Application.UnitTests.UseCases.Employees.CreateEmployee;
 
 public class CreateEmployeeUseCaseTests
 {

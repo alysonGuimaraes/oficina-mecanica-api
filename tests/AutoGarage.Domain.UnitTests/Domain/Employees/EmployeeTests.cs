@@ -4,7 +4,7 @@ using AutoGarage.Domain.Exceptions.Employees.Exceptions;
 using AutoGarage.Domain.Shared;
 using Shouldly;
 
-namespace AutoGarage.UnitTests.Domain.Employees;
+namespace AutoGarage.Domain.UnitTests.Domain.Employees;
 
 public class EmployeeTests
 {
