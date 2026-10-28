@@ -2,6 +2,7 @@
 using AutoGarage.Application.UseCases.Employees.CreateEmployee;
 using AutoGarage.Application.UseCases.Employees.GetEmployeeById;
 using AutoGarage.Application.UseCases.Employees.ListEmployees;
+using AutoGarage.Application.UseCases.Employees.UpdateEmployee;
 using AutoGarage.Communication.Requests.Employees;
 using AutoGarage.Communication.Responses.Employees;
 using MapsterMapper;
@@ -53,6 +54,21 @@ public class EmployeesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await useCase.Handle(id, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(EmployeeResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<EmployeeResponse>> Update(
+        [FromRoute] string id,
+        [FromBody] UpdateEmployeeRequest request,
+        [FromServices] IUpdateEmployeeUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateEmployeeCommand(id, request.Name, request.Email, request.Role);
+
+        var result = await useCase.Handle(command, cancellationToken);
 
         return Ok(result);
     }
