@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AutoGarage.Domain\AutoGarage.Domain.csproj" />
+    <ProjectReference Include="..\Shared\AutoGarage.Communication\AutoGarage.Communication.csproj" />
     <ProjectReference Include="..\Shared\AutoGarage.Communication\WebApplication1\AutoGarage.Communication.csproj" />
   </ItemGroup>
 

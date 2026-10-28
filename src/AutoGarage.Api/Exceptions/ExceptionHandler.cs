@@ -1,7 +1,6 @@
 using AutoGarage.Communication.Responses.Errors;
 using AutoGarage.Domain.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AutoGarage.Api.Exceptions;
 

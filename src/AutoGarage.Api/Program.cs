@@ -1,8 +1,8 @@
-using System.Text.Json.Serialization;
 using AutoGarage.Api.Exceptions;
 using AutoGarage.Application;
 using AutoGarage.Infrastructure;
 using AutoGarage.Infrastructure.Migrations;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,11 +1,9 @@
 <Solution>
   <Project Path="../tests/AutoGarage.CommonTestUtilities/AutoGarage.CommonTestUtilities.csproj" />
   <Project Path="../tests/AutoGarage.UnitTests/AutoGarage.UnitTests.csproj" />
-  <Project Path="AutoGarage.Api/AutoGarage.Api.csproj">
-    <BuildDependency Project="Shared/AutoGarage.Communication/WebApplication1/AutoGarage.Communication.csproj" />
-  </Project>
+  <Project Path="AutoGarage.Api/AutoGarage.Api.csproj" />
   <Project Path="AutoGarage.Application/AutoGarage.Application.csproj" />
   <Project Path="AutoGarage.Domain/AutoGarage.Domain.csproj" />
   <Project Path="AutoGarage.Infrastructure/AutoGarage.Infrastructure.csproj" />
-  <Project Path="Shared/AutoGarage.Communication/WebApplication1/AutoGarage.Communication.csproj" Id="a207668a-308d-490d-81e9-c3a1a7bbfae6" />
+  <Project Path="Shared/AutoGarage.Communication/AutoGarage.Communication.csproj" />
 </Solution>

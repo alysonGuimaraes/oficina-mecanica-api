@@ -1,5 +1,4 @@
 ﻿using AutoGarage.Application.Commands.Employees;
-using AutoGarage.Communication.Requests.Employees;
 using FluentValidation;
 
 namespace AutoGarage.Application.UseCases.Employees.CreateEmployee;

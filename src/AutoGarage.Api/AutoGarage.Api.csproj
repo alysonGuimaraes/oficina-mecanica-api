@@ -16,7 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AutoGarage.Application\AutoGarage.Application.csproj" />
     <ProjectReference Include="..\AutoGarage.Infrastructure\AutoGarage.Infrastructure.csproj" />
-    <ProjectReference Include="..\Shared\AutoGarage.Communication\WebApplication1\AutoGarage.Communication.csproj" />
+    <ProjectReference Include="..\Shared\AutoGarage.Communication\AutoGarage.Communication.csproj" />
   </ItemGroup>
 
 </Project>

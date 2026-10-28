@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using AutoGarage.Domain.Repositories;
+﻿using AutoGarage.Domain.Repositories;
 using AutoGarage.Domain.Repositories.Employees;
 using AutoGarage.Infrastructure.Persistence;
 using AutoGarage.Infrastructure.Persistence.Repositories;
@@ -7,6 +6,7 @@ using FluentMigrator.Runner;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace AutoGarage.Infrastructure;
 

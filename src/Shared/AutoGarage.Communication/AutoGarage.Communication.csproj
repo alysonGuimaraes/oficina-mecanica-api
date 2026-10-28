@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\AutoGarage.Domain\AutoGarage.Domain.csproj" />
+    <ProjectReference Include="..\..\AutoGarage.Domain\AutoGarage.Domain.csproj" />
   </ItemGroup>
 
 </Project>

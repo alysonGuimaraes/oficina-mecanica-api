@@ -1,6 +1,5 @@
 ﻿using AutoGarage.Application.Commands.Employees;
 using AutoGarage.Application.Services.Cryptography;
-using AutoGarage.Communication.Requests.Employees;
 using AutoGarage.Communication.Responses.Employees;
 using AutoGarage.Domain.Common.Exceptions;
 using AutoGarage.Domain.Entities;
@@ -31,21 +30,21 @@ public class CreateEmployeeUseCase : ICreateEmployeeUseCase
         _mapper = mapper;
     }
 
-    public async Task<EmployeeResponse> Handle(CreateEmployeeCommand command, CancellationToken cancellationToken)
+    public async Task<EmployeeResponse> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
     {
-        command = Normalize(command);
+        request = Normalize(request);
 
-        await Validate(command);
+        await Validate(request);
 
-        var hasEmail = await _employeeReadOnlyRepository.ExistsByEmail(command.Email, cancellationToken);
+        var hasEmail = await _employeeReadOnlyRepository.ExistsByEmail(request.Email, cancellationToken);
         if (hasEmail)
         {
-            throw new DuplicateEmailException(command.Email);
+            throw new DuplicateEmailException(request.Email);
         }
 
-        var passwordHash = _passwordEncripter.Encrypt(command.Password);
+        var passwordHash = _passwordEncripter.Encrypt(request.Password);
 
-        var employee = Employee.Create(command.Name, command.Email, passwordHash, command.Role);
+        var employee = Employee.Create(request.Name, request.Email, passwordHash, request.Role);
 
         await _employeeWriteOnlyRepository.Add(employee, cancellationToken);
         await _workUnit.Commit();
