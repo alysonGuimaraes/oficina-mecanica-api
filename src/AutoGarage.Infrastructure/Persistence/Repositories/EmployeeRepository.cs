@@ -19,6 +19,15 @@ public class EmployeeRepository : IEmployeeReadOnlyRepository, IEmployeeWriteOnl
             .AnyAsync(e => e.Email.ToLower() == email.ToLower(), cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Employee>> GetAll(CancellationToken cancellationToken)
+    {
+        return await _context.Employees
+            .AsNoTracking()
+            .OrderBy(e => e.CreatedAt)
+            .ThenBy(e => e.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task Add(Employee employee, CancellationToken cancellationToken)
     {
         await _context.Employees.AddAsync(employee, cancellationToken);

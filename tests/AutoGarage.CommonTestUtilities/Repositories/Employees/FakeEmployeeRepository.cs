@@ -4,7 +4,7 @@ using AutoGarage.Domain.Repositories.Employees;
 namespace AutoGarage.CommonTestUtilities.Repositories.Employees;
 
 /// <summary>
-/// Repositório em memória. Replica a regra de e-mail case-insensitive do repositório real.
+/// Repositório em memória. Replica a regra de e-mail case-insensitive e a ordenação do repositório real.
 /// </summary>
 public class FakeEmployeeRepository : IEmployeeReadOnlyRepository, IEmployeeWriteOnlyRepository
 {
@@ -23,6 +23,16 @@ public class FakeEmployeeRepository : IEmployeeReadOnlyRepository, IEmployeeWrit
         var exists = _employees.Any(e => e.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
 
         return Task.FromResult(exists);
+    }
+
+    public Task<IReadOnlyList<Employee>> GetAll(CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Employee> ordered = _employees
+            .OrderBy(e => e.CreatedAt)
+            .ThenBy(e => e.Id)
+            .ToList();
+
+        return Task.FromResult(ordered);
     }
 
     public Task Add(Employee employee, CancellationToken cancellationToken)
