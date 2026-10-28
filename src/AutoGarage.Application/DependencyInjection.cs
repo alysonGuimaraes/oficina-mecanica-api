@@ -4,6 +4,7 @@ using AutoGarage.Application.UseCases.Employees.CreateEmployee;
 using AutoGarage.Application.UseCases.Employees.GetEmployeeById;
 using AutoGarage.Application.UseCases.Employees.ListEmployees;
 using AutoGarage.Application.UseCases.Employees.UpdateEmployee;
+using AutoGarage.Application.UseCases.Employees.UpdateEmployeeStatus;
 using Mapster;
 using MapsterMapper;
 using Microsoft.Extensions.Configuration;
@@ -34,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IListEmployeesUseCase, ListEmployeesUseCase>();
         services.AddScoped<IGetEmployeeByIdUseCase, GetEmployeeByIdUseCase>();
         services.AddScoped<IUpdateEmployeeUseCase, UpdateEmployeeUseCase>();
+        services.AddScoped<IUpdateEmployeeStatusUseCase, UpdateEmployeeStatusUseCase>();
     }
 
     private static void AddPasswordEncripter(IServiceCollection services, IConfiguration configuration)
