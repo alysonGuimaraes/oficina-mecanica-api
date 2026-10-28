@@ -1,5 +1,6 @@
 ﻿using AutoGarage.Application.Commands.Employees;
 using AutoGarage.Application.UseCases.Employees.CreateEmployee;
+using AutoGarage.Application.UseCases.Employees.ListEmployees;
 using AutoGarage.Communication.Requests.Employees;
 using AutoGarage.Communication.Responses.Employees;
 using MapsterMapper;
@@ -30,5 +31,16 @@ public class EmployeesController : ControllerBase
         var result = await useCase.Handle(command, cancellationToken);
 
         return Created(string.Empty, result);
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<EmployeeResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<EmployeeResponse>>> GetAll(
+        [FromServices] IListEmployeesUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(cancellationToken);
+
+        return Ok(result);
     }
 }
