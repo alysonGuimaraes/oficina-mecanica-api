@@ -2,11 +2,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AutoGarage.Domain\AutoGarage.Domain.csproj" />
+    <ProjectReference Include="..\Shared\AutoGarage.Communication\WebApplication1\AutoGarage.Communication.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.2.0" />
     <PackageReference Include="Mapster" Version="10.0.13" />
+    <PackageReference Include="Mapster.DependencyInjection" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.14" />
   </ItemGroup>
 
   <PropertyGroup>

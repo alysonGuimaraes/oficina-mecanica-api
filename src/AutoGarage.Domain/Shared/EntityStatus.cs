@@ -2,6 +2,6 @@
 
 public enum EntityStatus
 {
-    Active = 1,
-    Inactive = 0
+    ACTIVE = 1,
+    INACTIVE = 0
 }

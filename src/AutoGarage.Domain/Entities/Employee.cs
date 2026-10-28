@@ -1,8 +1,8 @@
-﻿using AutoGarage.Domain.Employees.Enums;
-using AutoGarage.Domain.Employees.Exceptions;
+﻿using AutoGarage.Domain.Enums.Employees;
+using AutoGarage.Domain.Exceptions.Employees.Exceptions;
 using AutoGarage.Domain.Shared;
 
-namespace AutoGarage.Domain.Employees;
+namespace AutoGarage.Domain.Entities;
 
 public class Employee
 {
@@ -24,7 +24,7 @@ public class Employee
         Email = email;
         PasswordHash = passwordHash;
         Role = role;
-        Status = EntityStatus.Active;
+        Status = EntityStatus.ACTIVE;
         CreatedAt = DateTime.UtcNow;
     }
 
@@ -53,23 +53,29 @@ public class Employee
 
     public void Activate()
     {
-        if (Status == EntityStatus.Active)
+        if (Status == EntityStatus.ACTIVE)
         {
             throw new EmployeeAlreadyActiveException(Id);
         }
 
-        Status = EntityStatus.Active;
+        Status = EntityStatus.ACTIVE;
         UpdatedAt = DateTime.UtcNow;
     }
 
     public void Deactivate()
     {
-        if (Status == EntityStatus.Inactive)
+        if (Status == EntityStatus.INACTIVE)
         {
             throw new EmployeeAlreadyInactiveException(Id);
         }
 
-        Status = EntityStatus.Inactive; 
+        Status = EntityStatus.INACTIVE;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdatePasswordHash(string password)
+    {
+        PasswordHash = password;
         UpdatedAt = DateTime.UtcNow;
     }
 }

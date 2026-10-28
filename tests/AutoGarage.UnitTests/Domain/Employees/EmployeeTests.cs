@@ -1,23 +1,23 @@
-﻿namespace AutoGarage.UnitTests.Domain.Employees;
-
-using AutoGarage.Domain.Employees;
-using AutoGarage.Domain.Employees.Enums;
-using AutoGarage.Domain.Employees.Exceptions;
+﻿using AutoGarage.Domain.Entities;
+using AutoGarage.Domain.Enums.Employees;
+using AutoGarage.Domain.Exceptions.Employees.Exceptions;
 using AutoGarage.Domain.Shared;
 using Shouldly;
+
+namespace AutoGarage.UnitTests.Domain.Employees;
 
 public class EmployeeTests
 {
 
     #region Success Tests
     [Fact]
-	public void create_WithValidData_ShouldCreateEmployeeAsActive()
-	{
+    public void Create_WithValidData_ShouldCreateEmployeeAsActive()
+    {
         // Arrange
         var name = "John Doe";
         var email = "john@autogarage.com";
         var passwordHash = "$2a$11$ValidHashStringMocked";
-        var role = EmployeeRole.Mechanic;
+        var role = EmployeeRole.MECHANIC;
 
         // Act
         var employee = Employee.Create(name, email, passwordHash, role);
@@ -29,7 +29,7 @@ public class EmployeeTests
         employee.Email.ShouldBe(email);
         employee.PasswordHash.ShouldBe(passwordHash);
         employee.Role.ShouldBe(role);
-        employee.Status.ShouldBe(EntityStatus.Active);
+        employee.Status.ShouldBe(EntityStatus.ACTIVE);
         employee.CreatedAt.ShouldBeLessThanOrEqualTo(DateTime.UtcNow);
     }
 
@@ -37,10 +37,10 @@ public class EmployeeTests
     public void Update_WithValidData_ShouldUpdateEmployeeData()
     {
         // Arrange
-        var employee = Employee.Create("Tony Stark", "TonyStark@autogarage.com", "hash", EmployeeRole.Mechanic);
+        var employee = Employee.Create("Tony Stark", "TonyStark@autogarage.com", "hash", EmployeeRole.MECHANIC);
         var newName = "Tony Stank";
         var newEmail = "TonyStank@autogarage.com";
-        var newRole = EmployeeRole.Attendant;
+        var newRole = EmployeeRole.ATTENDANT;
 
         // Act
         employee.UpdateProfile(newName, newEmail, newRole);
@@ -58,14 +58,14 @@ public class EmployeeTests
     public void Activate_InactiveEmployee_ShouldChangeStatusToActive()
     {
         // Arrange
-        var inactiveEmployee = Employee.Create("Tony Stark", "TonyStark@autogarage.com", "hash", EmployeeRole.Mechanic);
+        var inactiveEmployee = Employee.Create("Tony Stark", "TonyStark@autogarage.com", "hash", EmployeeRole.MECHANIC);
         inactiveEmployee.Deactivate();
 
         // Act
         inactiveEmployee.Activate();
 
         // Assert
-        inactiveEmployee.Status.ShouldBe(EntityStatus.Active);
+        inactiveEmployee.Status.ShouldBe(EntityStatus.ACTIVE);
         inactiveEmployee.UpdatedAt.ShouldNotBeNull();
     }
 
@@ -73,13 +73,13 @@ public class EmployeeTests
     public void Deactivate_ActiveEmployee_ShouldChangeStatusToInactive()
     {
         // Arrange
-        var employee = Employee.Create("John Doe", "john@autogarage.com", "hash", EmployeeRole.Attendant);
+        var employee = Employee.Create("John Doe", "john@autogarage.com", "hash", EmployeeRole.ATTENDANT);
 
         // Act
         employee.Deactivate();
 
         // Assert
-        employee.Status.ShouldBe(EntityStatus.Inactive);
+        employee.Status.ShouldBe(EntityStatus.INACTIVE);
         employee.UpdatedAt.ShouldNotBeNull();
     }
 
@@ -103,7 +103,7 @@ public class EmployeeTests
     public void Update_WithInvalidRole_ShouldThrowInvalidEmployeeRoleException()
     {
         // Arrange
-        var employee = Employee.Create("Jane Doe", "jane@autogarage.com", "hash", EmployeeRole.Mechanic);
+        var employee = Employee.Create("Jane Doe", "jane@autogarage.com", "hash", EmployeeRole.MECHANIC);
         var invalidRole = (EmployeeRole)99;
 
         // Act & Assert
@@ -117,7 +117,7 @@ public class EmployeeTests
     public void Activate_AlreadyActiveEmployee_ShouldThrowEmployeeAlreadyActiveException()
     {
         // Arrange
-        var employee = Employee.Create("Jane Doe", "jane@autogarage.com", "hash", EmployeeRole.Mechanic);
+        var employee = Employee.Create("Jane Doe", "jane@autogarage.com", "hash", EmployeeRole.MECHANIC);
 
         // Act & Assert
         Should.Throw<EmployeeAlreadyActiveException>(() =>
@@ -130,7 +130,7 @@ public class EmployeeTests
     public void Deactivate_AlreadyInactiveEmployee_ShouldThrowEmployeeAlreadyInactiveException()
     {
         // Arrange
-        var employee = Employee.Create("Jane Doe", "jane@autogarage.com", "hash", EmployeeRole.Mechanic);
+        var employee = Employee.Create("Jane Doe", "jane@autogarage.com", "hash", EmployeeRole.MECHANIC);
         employee.Deactivate();
 
         // Act & Assert

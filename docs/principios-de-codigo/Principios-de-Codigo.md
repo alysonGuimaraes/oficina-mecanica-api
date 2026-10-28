@@ -22,10 +22,10 @@ public class Customer
 {
     public void Deactivate()
     {
-        if (Status == EntityStatus.Inactive)
+        if (Status == EntityStatus.INACTIVE)
             throw new CustomerAlreadyInactiveException(Id);
             
-        Status = EntityStatus.Inactive;
+        Status = EntityStatus.INACTIVE;
         UpdatedAt = DateTime.UtcNow;
     }
 }
@@ -35,9 +35,9 @@ public class Customer
 public IActionResult Deactivate(long id)
 {
     var customer = _repository.GetById(id);
-    if (customer.Status == EntityStatus.Inactive)
+    if (customer.Status == EntityStatus.INACTIVE)
         return BadRequest("Cliente já está inativo"); // Regra no lugar errado
-    customer.Status = EntityStatus.Inactive;
+    customer.Status = EntityStatus.INACTIVE;
     _repository.Update(customer);
     return Ok();
 }
@@ -52,7 +52,7 @@ public IActionResult Deactivate(long id)
 - **Value Objects reutilizáveis:** Crie VOs para conceitos repetidos (ex: `Document`, `Email`, `Money`).
 - **Extensões e Helpers:** Utilize métodos de extensão para lógica comum e sem estado.
 - **Mapeamento centralizado:** Utilize `Mapster` para evitar mapeamentos manuais repetitivos.
-- **Exceções base:** Reutilize exceções base (`DomainException`, `ApplicationException`) ao invés de criar exceções genéricas.
+- **Exceções base:** Reutilize as exceções base (`DomainException` e as bases de categoria, como `NotFoundDomainException`) ao invés de criar exceções genéricas.
 - **Validadores compartilhados:** Centralize regras de validação com `FluentValidation`.
 
 **Exemplo:**

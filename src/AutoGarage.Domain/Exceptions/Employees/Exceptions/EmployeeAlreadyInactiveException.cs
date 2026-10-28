@@ -1,8 +1,8 @@
-namespace AutoGarage.Domain.Employees.Exceptions;
+namespace AutoGarage.Domain.Exceptions.Employees.Exceptions;
 
 using AutoGarage.Domain.Common.Exceptions;
 
-public class EmployeeAlreadyInactiveException : DomainException
+public class EmployeeAlreadyInactiveException : ConflictDomainException
 {
     public EmployeeAlreadyInactiveException(Guid id)
         : base($"Employee with id '{id}' is already inactive.", "employee-already-inactive")

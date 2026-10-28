@@ -1,6 +1,6 @@
 ﻿namespace AutoGarage.Domain.Common.Exceptions;
 
-public abstract class DomainException : Exception
+public abstract class DomainException : AutoGarageException
 {
     public string ErrorType { get; }
 
