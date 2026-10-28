@@ -1,4 +1,4 @@
-﻿using AutoGarage.Domain.Entities;
+using AutoGarage.Domain.Entities;
 using AutoGarage.Domain.Repositories.Employees;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +17,12 @@ public class EmployeeRepository : IEmployeeReadOnlyRepository, IEmployeeWriteOnl
     {
         return await _context.Employees
             .AnyAsync(e => e.Email.ToLower() == email.ToLower(), cancellationToken);
+    }
+
+    public async Task<bool> ExistsByEmailExcludingId(string email, Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.Employees
+            .AnyAsync(e => e.Id != id && e.Email.ToLower() == email.ToLower(), cancellationToken);
     }
 
     public async Task<IReadOnlyList<Employee>> GetAll(CancellationToken cancellationToken)
@@ -38,5 +44,12 @@ public class EmployeeRepository : IEmployeeReadOnlyRepository, IEmployeeWriteOnl
     public async Task Add(Employee employee, CancellationToken cancellationToken)
     {
         await _context.Employees.AddAsync(employee, cancellationToken);
+    }
+
+    public Task Update(Employee employee, CancellationToken cancellationToken)
+    {
+        _context.Employees.Update(employee);
+
+        return Task.CompletedTask;
     }
 }

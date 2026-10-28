@@ -25,6 +25,13 @@ public class FakeEmployeeRepository : IEmployeeReadOnlyRepository, IEmployeeWrit
         return Task.FromResult(exists);
     }
 
+    public Task<bool> ExistsByEmailExcludingId(string email, Guid id, CancellationToken cancellationToken)
+    {
+        var exists = _employees.Any(e => e.Id != id && e.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+
+        return Task.FromResult(exists);
+    }
+
     public Task<IReadOnlyList<Employee>> GetAll(CancellationToken cancellationToken)
     {
         IReadOnlyList<Employee> ordered = _employees
@@ -44,6 +51,11 @@ public class FakeEmployeeRepository : IEmployeeReadOnlyRepository, IEmployeeWrit
     {
         _employees.Add(employee);
 
+        return Task.CompletedTask;
+    }
+
+    public Task Update(Employee employee, CancellationToken cancellationToken)
+    {
         return Task.CompletedTask;
     }
 }
