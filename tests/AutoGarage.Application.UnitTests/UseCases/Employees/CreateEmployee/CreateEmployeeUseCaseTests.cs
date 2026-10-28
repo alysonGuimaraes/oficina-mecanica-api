@@ -1,3 +1,4 @@
+using AutoGarage.Application.Services.Normalization;
 using AutoGarage.Application.UseCases.Employees.CreateEmployee;
 using AutoGarage.CommonTestUtilities.Commands.Employees;
 using AutoGarage.CommonTestUtilities.Cryptography;
@@ -178,6 +179,7 @@ public class CreateEmployeeUseCaseTests
             repository,
             unitWork,
             PasswordEncripterBuilder.Build(),
+            new StringNormalizer(),
             MapperBuilder.Build());
 
         return new CreateEmployeeUseCaseSut(useCase, repository, unitWork);

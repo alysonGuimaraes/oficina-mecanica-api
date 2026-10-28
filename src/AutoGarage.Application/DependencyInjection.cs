@@ -1,4 +1,5 @@
 ﻿using AutoGarage.Application.Services.Cryptography;
+using AutoGarage.Application.Services.Normalization;
 using AutoGarage.Application.UseCases.Employees.CreateEmployee;
 using AutoGarage.Application.UseCases.Employees.GetEmployeeById;
 using AutoGarage.Application.UseCases.Employees.ListEmployees;
@@ -18,6 +19,8 @@ public static class DependencyInjection
         AddUseCases(services);
 
         AddPasswordEncripter(services, configuration);
+
+        services.AddSingleton<IStringNormalizer, StringNormalizer>();
 
         AddMapsterConfig(services);
 

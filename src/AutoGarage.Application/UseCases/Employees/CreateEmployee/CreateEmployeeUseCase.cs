@@ -1,5 +1,6 @@
-﻿using AutoGarage.Application.Commands.Employees;
+using AutoGarage.Application.Commands.Employees;
 using AutoGarage.Application.Services.Cryptography;
+using AutoGarage.Application.Services.Normalization;
 using AutoGarage.Communication.Responses.Employees;
 using AutoGarage.Domain.Common.Exceptions;
 using AutoGarage.Domain.Entities;
@@ -7,26 +8,25 @@ using AutoGarage.Domain.Exceptions.Employees.Exceptions;
 using AutoGarage.Domain.Repositories;
 using AutoGarage.Domain.Repositories.Employees;
 using MapsterMapper;
-using System.Text.RegularExpressions;
 
 namespace AutoGarage.Application.UseCases.Employees.CreateEmployee;
 
 public class CreateEmployeeUseCase : ICreateEmployeeUseCase
 {
-    private static readonly Regex MultipleWhitespace = new(@"\s+");
-
     private readonly IEmployeeReadOnlyRepository _employeeReadOnlyRepository;
     private readonly IEmployeeWriteOnlyRepository _employeeWriteOnlyRepository;
     private readonly IUnitWork _workUnit;
     private readonly PasswordEncripter _passwordEncripter;
+    private readonly IStringNormalizer _stringNormalizer;
     private readonly IMapper _mapper;
 
-    public CreateEmployeeUseCase(IEmployeeReadOnlyRepository employeeReadOnlyRepository, IEmployeeWriteOnlyRepository employeeWriteOnlyRepository, IUnitWork workUnit, PasswordEncripter passwordEncripter, IMapper mapper)
+    public CreateEmployeeUseCase(IEmployeeReadOnlyRepository employeeReadOnlyRepository, IEmployeeWriteOnlyRepository employeeWriteOnlyRepository, IUnitWork workUnit, PasswordEncripter passwordEncripter, IStringNormalizer stringNormalizer, IMapper mapper)
     {
         _passwordEncripter = passwordEncripter;
         _employeeReadOnlyRepository = employeeReadOnlyRepository;
         _employeeWriteOnlyRepository = employeeWriteOnlyRepository;
         _workUnit = workUnit;
+        _stringNormalizer = stringNormalizer;
         _mapper = mapper;
     }
 
@@ -53,15 +53,12 @@ public class CreateEmployeeUseCase : ICreateEmployeeUseCase
     }
 
     // A senha não é normalizada: espaços podem fazer parte dela.
-    private static CreateEmployeeCommand Normalize(CreateEmployeeCommand command) =>
+    private CreateEmployeeCommand Normalize(CreateEmployeeCommand command) =>
         command with
         {
-            Name = NormalizeWhitespace(command.Name),
-            Email = NormalizeWhitespace(command.Email).ToUpperInvariant()
+            Name = _stringNormalizer.Normalize(command.Name),
+            Email = _stringNormalizer.Normalize(command.Email).ToUpperInvariant()
         };
-
-    private static string NormalizeWhitespace(string? value) =>
-        MultipleWhitespace.Replace(value ?? string.Empty, " ").Trim();
 
     private static async Task Validate(CreateEmployeeCommand command)
     {
@@ -77,4 +74,3 @@ public class CreateEmployeeUseCase : ICreateEmployeeUseCase
         }
     }
 }
-
