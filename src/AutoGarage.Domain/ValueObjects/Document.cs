@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace AutoGarage.Domain.ValueObjects;
 
-public sealed class Document
+public sealed record Document
 {
     private static readonly Regex NonAlphanumeric = new("[^A-Za-z0-9]", RegexOptions.Compiled);
 
