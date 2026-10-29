@@ -1,5 +1,6 @@
 using AutoGarage.Application.Commands.Customers;
 using AutoGarage.Application.UseCases.Customers.CreateCustomer;
+using AutoGarage.Application.UseCases.Customers.GetCustomerById;
 using AutoGarage.Application.UseCases.Customers.ListCustomers;
 using AutoGarage.Communication.Requests.Customers;
 using AutoGarage.Communication.Responses.Customers;
@@ -33,6 +34,18 @@ public class CustomersController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await useCase.Handle(status, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(CustomerResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<CustomerResponse>> GetById(
+        [FromRoute] string id,
+        [FromServices] IGetCustomerByIdUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(id, cancellationToken);
 
         return Ok(result);
     }
