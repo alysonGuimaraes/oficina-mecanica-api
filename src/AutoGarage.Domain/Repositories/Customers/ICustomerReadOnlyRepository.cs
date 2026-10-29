@@ -12,4 +12,6 @@ public interface ICustomerReadOnlyRepository
     Task<IReadOnlyList<Customer>> GetByStatus(EntityStatus status, CancellationToken cancellationToken);
 
     Task<Customer?> GetById(Guid id, CancellationToken cancellationToken);
+
+    Task<Customer?> GetByDocument(string document, CancellationToken cancellationToken);
 }

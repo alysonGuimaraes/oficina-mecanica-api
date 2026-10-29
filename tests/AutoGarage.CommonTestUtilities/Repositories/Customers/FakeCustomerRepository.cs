@@ -49,6 +49,11 @@ public class FakeCustomerRepository : ICustomerReadOnlyRepository, ICustomerWrit
         return Task.FromResult(_customers.FirstOrDefault(c => c.Id == id));
     }
 
+    public Task<Customer?> GetByDocument(string document, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(_customers.FirstOrDefault(c => c.Document.Value == document));
+    }
+
     public Task Add(Customer customer, CancellationToken cancellationToken)
     {
         _customers.Add(customer);
