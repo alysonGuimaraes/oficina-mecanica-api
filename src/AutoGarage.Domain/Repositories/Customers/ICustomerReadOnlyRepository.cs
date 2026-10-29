@@ -10,4 +10,6 @@ public interface ICustomerReadOnlyRepository
     Task<bool> ExistsByDocument(string document, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<Customer>> GetByStatus(EntityStatus status, CancellationToken cancellationToken);
+
+    Task<Customer?> GetById(Guid id, CancellationToken cancellationToken);
 }

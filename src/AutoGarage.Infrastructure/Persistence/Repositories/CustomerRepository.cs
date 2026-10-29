@@ -39,6 +39,13 @@ public class CustomerRepository : ICustomerReadOnlyRepository, ICustomerWriteOnl
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Customer?> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.Customers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+    }
+
     public async Task Add(Customer customer, CancellationToken cancellationToken)
     {
         await _context.Customers.AddAsync(customer, cancellationToken);
