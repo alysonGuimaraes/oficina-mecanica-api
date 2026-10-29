@@ -1,5 +1,7 @@
-﻿using AutoGarage.Domain.Repositories;
+﻿using AutoGarage.Application.Services.Authentication;
+using AutoGarage.Domain.Repositories;
 using AutoGarage.Domain.Repositories.Employees;
+using AutoGarage.Infrastructure.Authentication;
 using AutoGarage.Infrastructure.Persistence;
 using AutoGarage.Infrastructure.Persistence.Repositories;
 using FluentMigrator.Runner;
@@ -15,6 +17,8 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
 
+        AddAuthentication(services, configuration);
+
         AddRepositories(services);
 
         AddDbContext(services, configuration);
@@ -22,6 +26,26 @@ public static class DependencyInjection
         AddFluentMigrator_Postgres(services, configuration);
 
         return services;
+    }
+
+    private static void AddAuthentication(IServiceCollection services, IConfiguration configuration)
+    {
+        var section = configuration.GetSection("Settings:Jwt");
+
+        var settings = new JwtSettings
+        {
+            Key = section["Key"] ?? string.Empty,
+            Issuer = section["Issuer"] ?? string.Empty,
+            Audience = section["Audience"] ?? string.Empty,
+            ExpiresInMinutes = int.Parse(section["ExpiresInMinutes"] ?? "60")
+        };
+
+        if (string.IsNullOrWhiteSpace(settings.Key))
+        {
+            throw new InvalidOperationException("Settings:Jwt:Key must be configured.");
+        }
+
+        services.AddSingleton<IAccessTokenGenerator>(new JwtAccessTokenGenerator(settings));
     }
 
     private static void AddDbContext(IServiceCollection services, IConfiguration configuration)

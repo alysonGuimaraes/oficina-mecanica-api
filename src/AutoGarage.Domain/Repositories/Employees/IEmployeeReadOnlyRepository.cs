@@ -11,4 +11,6 @@ public interface IEmployeeReadOnlyRepository
     Task<IReadOnlyList<Employee>> GetAll(CancellationToken cancellationToken);
 
     Task<Employee?> GetById(Guid id, CancellationToken cancellationToken);
+
+    Task<Employee?> GetByEmail(string email, CancellationToken cancellationToken);
 }

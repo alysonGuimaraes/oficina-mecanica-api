@@ -41,6 +41,13 @@ public class EmployeeRepository : IEmployeeReadOnlyRepository, IEmployeeWriteOnl
             .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
+    public async Task<Employee?> GetByEmail(string email, CancellationToken cancellationToken)
+    {
+        return await _context.Employees
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Email.ToLower() == email.ToLower(), cancellationToken);
+    }
+
     public async Task Add(Employee employee, CancellationToken cancellationToken)
     {
         await _context.Employees.AddAsync(employee, cancellationToken);
