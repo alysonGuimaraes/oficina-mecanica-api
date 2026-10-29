@@ -164,3 +164,7 @@ Registro das divergências entre a regra desejada e o código, com a decisão to
 | 6 | `ExceptionHandler` não registra em log os erros inesperados | Adicionar `ILogger` no handler. | **Pendente** |
 | 7 | `ErrorOnValidationException` em `Domain/Common/Exceptions/` | Mantida no `Domain`, por legibilidade e entendimento do código. | Decidido |
 | 8 | Banco usado pelos testes de integração do repositório | Testes de integração rodam com EF Core InMemory, sem banco externo nem Docker. Consequência: a ordenação de `uuid` do PostgreSQL e a unicidade do índice de e-mail não são cobertas por teste automatizado. | Decidido |
+
+## Documentos relacionados
+
+- [Modelo de dados](modelo-de-dados.md): schema, migrations e regras de tradução para o código.
