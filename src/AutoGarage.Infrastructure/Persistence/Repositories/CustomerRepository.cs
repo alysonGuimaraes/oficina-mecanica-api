@@ -1,5 +1,6 @@
 using AutoGarage.Domain.Entities;
 using AutoGarage.Domain.Repositories.Customers;
+using AutoGarage.Domain.Shared;
 using AutoGarage.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +27,16 @@ public class CustomerRepository : ICustomerReadOnlyRepository, ICustomerWriteOnl
 
         return await _context.Customers
             .AnyAsync(c => c.Document == documentValue, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Customer>> GetByStatus(EntityStatus status, CancellationToken cancellationToken)
+    {
+        return await _context.Customers
+            .AsNoTracking()
+            .Where(c => c.Status == status)
+            .OrderBy(c => c.CreatedAt)
+            .ThenBy(c => c.Id)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task Add(Customer customer, CancellationToken cancellationToken)

@@ -1,5 +1,6 @@
 using AutoGarage.Domain.Entities;
 using AutoGarage.Domain.Repositories.Customers;
+using AutoGarage.Domain.Shared;
 
 namespace AutoGarage.CommonTestUtilities.Repositories.Customers;
 
@@ -30,6 +31,17 @@ public class FakeCustomerRepository : ICustomerReadOnlyRepository, ICustomerWrit
         var exists = _customers.Any(c => c.Document.Value == document);
 
         return Task.FromResult(exists);
+    }
+
+    public Task<IReadOnlyList<Customer>> GetByStatus(EntityStatus status, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Customer> ordered = _customers
+            .Where(c => c.Status == status)
+            .OrderBy(c => c.CreatedAt)
+            .ThenBy(c => c.Id)
+            .ToList();
+
+        return Task.FromResult(ordered);
     }
 
     public Task Add(Customer customer, CancellationToken cancellationToken)

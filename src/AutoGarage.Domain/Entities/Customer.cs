@@ -36,4 +36,10 @@ public class Customer
     {
         return new Customer(name, document, email, ddd, phoneNumber);
     }
+
+    public void Deactivate()
+    {
+        Status = EntityStatus.INACTIVE;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
