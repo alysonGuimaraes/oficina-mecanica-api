@@ -47,6 +47,11 @@ public class FakeEmployeeRepository : IEmployeeReadOnlyRepository, IEmployeeWrit
         return Task.FromResult(_employees.FirstOrDefault(e => e.Id == id));
     }
 
+    public Task<Employee?> GetByEmail(string email, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(_employees.FirstOrDefault(e => e.Email.Equals(email, StringComparison.OrdinalIgnoreCase)));
+    }
+
     public Task Add(Employee employee, CancellationToken cancellationToken)
     {
         _employees.Add(employee);
