@@ -69,6 +69,7 @@ public class ExceptionHandler : IExceptionHandler
         NotFoundDomainException => StatusCodes.Status404NotFound,
         ConflictDomainException => StatusCodes.Status409Conflict,
         BadRequestDomainException => StatusCodes.Status400BadRequest,
+        UnauthorizedDomainException => StatusCodes.Status401Unauthorized,
         _ => StatusCodes.Status422UnprocessableEntity
     };
 
