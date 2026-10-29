@@ -1,4 +1,5 @@
 using AutoGarage.Domain.Enums.Customers;
+using AutoGarage.Domain.Exceptions.Customers.Exceptions;
 using AutoGarage.Domain.Shared;
 using AutoGarage.Domain.ValueObjects;
 
@@ -37,8 +38,24 @@ public class Customer
         return new Customer(name, document, email, ddd, phoneNumber);
     }
 
+    public void Activate()
+    {
+        if (Status == EntityStatus.ACTIVE)
+        {
+            throw new CustomerAlreadyActiveException(Id);
+        }
+
+        Status = EntityStatus.ACTIVE;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Deactivate()
     {
+        if (Status == EntityStatus.INACTIVE)
+        {
+            throw new CustomerAlreadyInactiveException(Id);
+        }
+
         Status = EntityStatus.INACTIVE;
         UpdatedAt = DateTime.UtcNow;
     }
