@@ -38,6 +38,15 @@ public class Customer
         return new Customer(name, document, email, ddd, phoneNumber);
     }
 
+    public void UpdateProfile(string name, string email, string ddd, string phoneNumber)
+    {
+        Name = name;
+        Email = email;
+        Ddd = ddd;
+        PhoneNumber = phoneNumber;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Activate()
     {
         if (Status == EntityStatus.ACTIVE)

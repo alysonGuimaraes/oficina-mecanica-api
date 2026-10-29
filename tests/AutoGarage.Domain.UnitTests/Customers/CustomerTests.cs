@@ -69,6 +69,34 @@ public class CustomerTests
         exception.ErrorType.ShouldBe("customer-already-inactive");
     }
 
+    [Fact]
+    public void UpdateProfile_ValidValues_ShouldChangeNameEmailDddPhoneAndSetUpdatedAt()
+    {
+        var customer = CreateCustomer();
+
+        customer.UpdateProfile("Jane", "JANE@AUTOGARAGE.COM", "11", "888888888");
+
+        customer.Name.ShouldBe("Jane");
+        customer.Email.ShouldBe("JANE@AUTOGARAGE.COM");
+        customer.Ddd.ShouldBe("11");
+        customer.PhoneNumber.ShouldBe("888888888");
+        customer.UpdatedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void UpdateProfile_ValidValues_ShouldKeepDocumentStatusAndCreatedAt()
+    {
+        var customer = CreateCustomer();
+        customer.Deactivate();
+        var createdAt = customer.CreatedAt;
+
+        customer.UpdateProfile("Jane", "JANE@AUTOGARAGE.COM", "11", "888888888");
+
+        customer.Document.Value.ShouldBe("52998224725");
+        customer.Status.ShouldBe(EntityStatus.INACTIVE);
+        customer.CreatedAt.ShouldBe(createdAt);
+    }
+
     private static Customer CreateCustomer()
     {
         return Customer.Create("John", new Document("52998224725"), "john@autogarage.com", "41", "999999999");
