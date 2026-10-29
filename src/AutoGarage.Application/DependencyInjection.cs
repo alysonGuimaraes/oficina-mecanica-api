@@ -1,5 +1,6 @@
 ﻿using AutoGarage.Application.Services.Cryptography;
 using AutoGarage.Application.Services.Normalization;
+using AutoGarage.Application.UseCases.Customers.CreateCustomer;
 using AutoGarage.Application.UseCases.Employees.CreateEmployee;
 using AutoGarage.Application.UseCases.Employees.GetEmployeeById;
 using AutoGarage.Application.UseCases.Employees.ListEmployees;
@@ -36,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<IGetEmployeeByIdUseCase, GetEmployeeByIdUseCase>();
         services.AddScoped<IUpdateEmployeeUseCase, UpdateEmployeeUseCase>();
         services.AddScoped<IUpdateEmployeeStatusUseCase, UpdateEmployeeStatusUseCase>();
+        services.AddScoped<ICreateCustomerUseCase, CreateCustomerUseCase>();
     }
 
     private static void AddPasswordEncripter(IServiceCollection services, IConfiguration configuration)
