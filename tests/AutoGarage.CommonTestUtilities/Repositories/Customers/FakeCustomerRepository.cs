@@ -33,6 +33,13 @@ public class FakeCustomerRepository : ICustomerReadOnlyRepository, ICustomerWrit
         return Task.FromResult(exists);
     }
 
+    public Task<bool> ExistsByEmailExcludingId(string email, Guid id, CancellationToken cancellationToken)
+    {
+        var exists = _customers.Any(c => c.Id != id && c.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+
+        return Task.FromResult(exists);
+    }
+
     public Task<IReadOnlyList<Customer>> GetByStatus(EntityStatus status, CancellationToken cancellationToken)
     {
         IReadOnlyList<Customer> ordered = _customers

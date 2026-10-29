@@ -29,6 +29,12 @@ public class CustomerRepository : ICustomerReadOnlyRepository, ICustomerWriteOnl
             .AnyAsync(c => c.Document == documentValue, cancellationToken);
     }
 
+    public async Task<bool> ExistsByEmailExcludingId(string email, Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.Customers
+            .AnyAsync(c => c.Id != id && c.Email.ToLower() == email.ToLower(), cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Customer>> GetByStatus(EntityStatus status, CancellationToken cancellationToken)
     {
         return await _context.Customers

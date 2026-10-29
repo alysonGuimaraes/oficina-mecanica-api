@@ -14,4 +14,6 @@ public interface ICustomerReadOnlyRepository
     Task<Customer?> GetById(Guid id, CancellationToken cancellationToken);
 
     Task<Customer?> GetByDocument(string document, CancellationToken cancellationToken);
+
+    Task<bool> ExistsByEmailExcludingId(string email, Guid id, CancellationToken cancellationToken);
 }
