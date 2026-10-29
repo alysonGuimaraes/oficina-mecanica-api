@@ -3,6 +3,7 @@ using AutoGarage.Application.UseCases.Customers.CreateCustomer;
 using AutoGarage.Application.UseCases.Customers.GetCustomerByDocument;
 using AutoGarage.Application.UseCases.Customers.GetCustomerById;
 using AutoGarage.Application.UseCases.Customers.ListCustomers;
+using AutoGarage.Application.UseCases.Customers.UpdateCustomerStatus;
 using AutoGarage.Communication.Requests.Customers;
 using AutoGarage.Communication.Responses.Customers;
 using Microsoft.AspNetCore.Mvc;
@@ -59,6 +60,21 @@ public class CustomersController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await useCase.Handle(id, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPatch("{id}/status")]
+    [ProducesResponseType(typeof(CustomerResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<CustomerResponse>> UpdateStatus(
+        [FromRoute] string id,
+        [FromBody] UpdateCustomerStatusRequest request,
+        [FromServices] IUpdateCustomerStatusUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateCustomerStatusCommand(id, request.Status);
+
+        var result = await useCase.Handle(command, cancellationToken);
 
         return Ok(result);
     }
