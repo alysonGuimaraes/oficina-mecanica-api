@@ -1,5 +1,6 @@
 using AutoGarage.Application.Commands.Customers;
 using AutoGarage.Application.UseCases.Customers.CreateCustomer;
+using AutoGarage.Application.UseCases.Customers.GetCustomerByDocument;
 using AutoGarage.Application.UseCases.Customers.GetCustomerById;
 using AutoGarage.Application.UseCases.Customers.ListCustomers;
 using AutoGarage.Communication.Requests.Customers;
@@ -34,6 +35,18 @@ public class CustomersController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await useCase.Handle(status, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("document")]
+    [ProducesResponseType(typeof(CustomerResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<CustomerResponse>> GetByDocument(
+        [FromQuery] string? document,
+        [FromServices] IGetCustomerByDocumentUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(document, cancellationToken);
 
         return Ok(result);
     }
