@@ -1,4 +1,5 @@
 using AutoGarage.Application.Commands.Employees;
+using AutoGarage.Application.Services.Status;
 using AutoGarage.Communication.Responses.Employees;
 using AutoGarage.Domain.Entities;
 using AutoGarage.Domain.Exceptions.Employees.Exceptions;
@@ -31,7 +32,10 @@ public class UpdateEmployeeStatusUseCase : IUpdateEmployeeStatusUseCase
             throw new InvalidEmployeeIdException();
         }
 
-        var status = ParseStatus(command.Status);
+        if (!EntityStatusParser.TryParse(command.Status, out var status))
+        {
+            throw new InvalidEmployeeStatusException();
+        }
 
         var employee = await _employeeReadOnlyRepository.GetById(employeeId, cancellationToken)
             ?? throw new EmployeeNotFoundException(employeeId);
@@ -50,13 +54,4 @@ public class UpdateEmployeeStatusUseCase : IUpdateEmployeeStatusUseCase
 
         return _mapper.Map<EmployeeResponse>(employee);
     }
-
-    // Enum.TryParse aceitaria números ("1", "0"); por isso a comparação é explícita.
-    private static EntityStatus ParseStatus(string value) =>
-        value.ToUpperInvariant() switch
-        {
-            "ACTIVE" => EntityStatus.ACTIVE,
-            "INACTIVE" => EntityStatus.INACTIVE,
-            _ => throw new InvalidEmployeeStatusException()
-        };
 }
