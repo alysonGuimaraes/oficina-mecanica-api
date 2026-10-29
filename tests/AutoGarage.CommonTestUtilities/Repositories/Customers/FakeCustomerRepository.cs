@@ -60,4 +60,16 @@ public class FakeCustomerRepository : ICustomerReadOnlyRepository, ICustomerWrit
 
         return Task.CompletedTask;
     }
+
+    public Task Update(Customer customer, CancellationToken cancellationToken)
+    {
+        var index = _customers.FindIndex(c => c.Id == customer.Id);
+
+        if (index >= 0)
+        {
+            _customers[index] = customer;
+        }
+
+        return Task.CompletedTask;
+    }
 }

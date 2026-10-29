@@ -59,4 +59,11 @@ public class CustomerRepository : ICustomerReadOnlyRepository, ICustomerWriteOnl
     {
         await _context.Customers.AddAsync(customer, cancellationToken);
     }
+
+    public Task Update(Customer customer, CancellationToken cancellationToken)
+    {
+        _context.Customers.Update(customer);
+
+        return Task.CompletedTask;
+    }
 }
