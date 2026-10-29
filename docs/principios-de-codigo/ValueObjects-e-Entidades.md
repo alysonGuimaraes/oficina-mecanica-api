@@ -82,10 +82,11 @@ public sealed record Plate
 - **Identidade:** Devem possuir um identificador único (`Id`). Pode ser `long`, `Guid` ou `Value Object` de ID.
 - **Comportamento sobre dados:** Expor **métodos com intenção** (`Activate()`, `Deactivate()`, `AddItem()`) ao invés de `SetX()`.
 - **Invariantes protegidas:** Regras que devem sempre ser verdadeiras devem ser garantidas pelos próprios métodos da entidade.
+  > **Decisão:** a entidade protege apenas invariantes de estado e transição (ex: role válido, não ativar quem já está ativo). Campos obrigatórios e formato de nome e e-mail são validados na Application. Ver [Arquitetura - Decisões de arquitetura](../arquitetura/README.md#decisoes-de-arquitetura), item 5.
 - **Sem anotações de infraestrutura:** Nenhuma anotação do EF Core ou ASP.NET Core no `Domain`.
 - **Construtor controlado:** Preferir construtor privado + **Factory Method** (`Create`) para criação de novas instâncias.
 - **Localização:** Devem ficar em `AutoGarage.Domain/<Aggregate>/Entities/` ou diretamente em `AutoGarage.Domain/<Aggregate>/` caso seja Aggregate Root.
-- **Nada de deleção física:** Conforme regra do projeto, entidades nunca devem ser removidas fisicamente. Utilizar inativação (`EntityStatus.Inactive`).
+- **Nada de deleção física:** Conforme regra do projeto, entidades nunca devem ser removidas fisicamente. Utilizar inativação (`EntityStatus.INACTIVE`).
 
 ### Exemplo
 
@@ -110,29 +111,20 @@ public class Customer
         Name = name;
         Email = email;
         Phone = phone;
-        Status = EntityStatus.Active;
+        Status = EntityStatus.ACTIVE;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 
     public static Customer Create(Document document, string name, string email, string phone)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new InvalidCustomerDataException("O nome do cliente é obrigatório.");
-
-        if (string.IsNullOrWhiteSpace(email))
-            throw new InvalidCustomerDataException("O e-mail do cliente é obrigatório.");
-
         return new Customer(document, name, email, phone);
     }
 
     public void UpdateContact(string name, string email, string phone)
     {
-        if (Status == EntityStatus.Inactive)
+        if (Status == EntityStatus.INACTIVE)
             throw new CustomerAlreadyInactiveException(Id);
-
-        if (string.IsNullOrWhiteSpace(name))
-            throw new InvalidCustomerDataException("O nome do cliente é obrigatório.");
 
         Name = name;
         Email = email;
@@ -142,19 +134,19 @@ public class Customer
 
     public void Deactivate()
     {
-        if (Status == EntityStatus.Inactive)
+        if (Status == EntityStatus.INACTIVE)
             throw new CustomerAlreadyInactiveException(Id);
 
-        Status = EntityStatus.Inactive;
+        Status = EntityStatus.INACTIVE;
         UpdatedAt = DateTime.UtcNow;
     }
 
     public void Activate()
     {
-        if (Status == EntityStatus.Active)
+        if (Status == EntityStatus.ACTIVE)
             throw new CustomerAlreadyActiveException(Id);
 
-        Status = EntityStatus.Active;
+        Status = EntityStatus.ACTIVE;
         UpdatedAt = DateTime.UtcNow;
     }
 }

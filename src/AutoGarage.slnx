@@ -1,3 +1,13 @@
 <Solution>
+  <Folder Name="/tests/">
+    <Project Path="../tests/AutoGarage.CommonTestUtilities/AutoGarage.CommonTestUtilities.csproj" />
+    <Project Path="../tests/AutoGarage.IntegrationTests/AutoGarage.IntegrationTests.csproj" />
+    <Project Path="../tests/AutoGarage.Domain.UnitTests/AutoGarage.Domain.UnitTests.csproj" />
+    <Project Path="../tests/AutoGarage.Application.UnitTests/AutoGarage.Application.UnitTests.csproj" />
+  </Folder>
   <Project Path="AutoGarage.Api/AutoGarage.Api.csproj" />
+  <Project Path="AutoGarage.Application/AutoGarage.Application.csproj" />
+  <Project Path="AutoGarage.Domain/AutoGarage.Domain.csproj" />
+  <Project Path="AutoGarage.Infrastructure/AutoGarage.Infrastructure.csproj" />
+  <Project Path="Shared/AutoGarage.Communication/AutoGarage.Communication.csproj" />
 </Solution>

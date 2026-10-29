@@ -26,7 +26,7 @@ spec:
             name: autogarage-api-secrets
         readinessProbe:
           httpGet:
-            path: /api/Service
+            path: /health
             port: 8080
           initialDelaySeconds: 5
           periodSeconds: 10
@@ -34,7 +34,7 @@ spec:
           failureThreshold: 3
         livenessProbe:
           httpGet:
-            path: /api/Service
+            path: /health
             port: 8080
           initialDelaySeconds: 15
           periodSeconds: 20
