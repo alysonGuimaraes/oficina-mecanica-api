@@ -17,6 +17,14 @@ public class PasswordEncripter(String additionalKey)
         return StringBytes(hashBytes);
     }
 
+    public bool Verify(string password, string passwordHash)
+    {
+        var computedHash = Encoding.UTF8.GetBytes(Encrypt(password));
+        var storedHash = Encoding.UTF8.GetBytes(passwordHash);
+
+        return CryptographicOperations.FixedTimeEquals(computedHash, storedHash);
+    }
+
     private static string StringBytes(byte[] bytes)
     {
         var sb = new StringBuilder();
