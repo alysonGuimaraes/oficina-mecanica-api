@@ -37,6 +37,11 @@ public class FakeServiceRepository : IServiceReadOnlyRepository, IServiceWriteOn
         return Task.FromResult(ordered);
     }
 
+    public Task<Service?> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(_services.FirstOrDefault(s => s.Id == id));
+    }
+
     public Task Add(Service service, CancellationToken cancellationToken)
     {
         _services.Add(service);
