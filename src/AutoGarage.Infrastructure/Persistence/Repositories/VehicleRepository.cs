@@ -40,8 +40,23 @@ public class VehicleRepository : IVehicleReadOnlyRepository, IVehicleWriteOnlyRe
             .FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
     }
 
+    public async Task<bool> ExistsByPlateExcludingId(string plate, Guid id, CancellationToken cancellationToken)
+    {
+        var plateValue = new Plate(plate);
+
+        return await _context.Vehicles
+            .AnyAsync(v => v.Id != id && v.Plate == plateValue, cancellationToken);
+    }
+
     public async Task Add(Vehicle vehicle, CancellationToken cancellationToken)
     {
         await _context.Vehicles.AddAsync(vehicle, cancellationToken);
+    }
+
+    public Task Update(Vehicle vehicle, CancellationToken cancellationToken)
+    {
+        _context.Vehicles.Update(vehicle);
+
+        return Task.CompletedTask;
     }
 }

@@ -10,4 +10,6 @@ public interface IVehicleReadOnlyRepository
     Task<IReadOnlyList<Vehicle>> GetByStatus(EntityStatus status, CancellationToken cancellationToken);
 
     Task<Vehicle?> GetById(Guid id, CancellationToken cancellationToken);
+
+    Task<bool> ExistsByPlateExcludingId(string plate, Guid id, CancellationToken cancellationToken);
 }

@@ -42,9 +42,28 @@ public class FakeVehicleRepository : IVehicleReadOnlyRepository, IVehicleWriteOn
         return Task.FromResult(_vehicles.FirstOrDefault(v => v.Id == id));
     }
 
+    public Task<bool> ExistsByPlateExcludingId(string plate, Guid id, CancellationToken cancellationToken)
+    {
+        var exists = _vehicles.Any(v => v.Id != id && v.Plate.Value == plate);
+
+        return Task.FromResult(exists);
+    }
+
     public Task Add(Vehicle vehicle, CancellationToken cancellationToken)
     {
         _vehicles.Add(vehicle);
+
+        return Task.CompletedTask;
+    }
+
+    public Task Update(Vehicle vehicle, CancellationToken cancellationToken)
+    {
+        var index = _vehicles.FindIndex(v => v.Id == vehicle.Id);
+
+        if (index >= 0)
+        {
+            _vehicles[index] = vehicle;
+        }
 
         return Task.CompletedTask;
     }
