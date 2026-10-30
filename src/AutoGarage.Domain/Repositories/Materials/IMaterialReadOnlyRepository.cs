@@ -10,4 +10,6 @@ public interface IMaterialReadOnlyRepository
     Task<IReadOnlyList<Material>> GetByStatus(EntityStatus status, CancellationToken cancellationToken);
 
     Task<Material?> GetById(Guid id, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<Material>> GetLowStockByStatus(EntityStatus status, CancellationToken cancellationToken);
 }
