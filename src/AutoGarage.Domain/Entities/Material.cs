@@ -64,4 +64,10 @@ public class Material
         StockMinimum = stockMinimum;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void IncreaseStock(int quantity)
+    {
+        StockQuantity += quantity;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

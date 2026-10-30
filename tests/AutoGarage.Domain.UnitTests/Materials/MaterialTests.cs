@@ -131,4 +131,27 @@ public class MaterialTests
         material.Price.ShouldBe(3.00m);
         material.UpdatedAt.ShouldNotBeNull();
     }
+
+    [Fact]
+    public void IncreaseStock_PositiveQuantity_ShouldAddToStockAndSetUpdatedAt()
+    {
+        var material = Material.Create("PARAFUSO", null, 2.50m, 3);
+
+        material.IncreaseStock(5);
+
+        material.StockQuantity.ShouldBe(5);
+        material.UpdatedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void IncreaseStock_InactiveMaterial_ShouldAddToStockAndKeepInactiveStatus()
+    {
+        var material = Material.Create("PARAFUSO", null, 2.50m, 3);
+        material.Deactivate();
+
+        material.IncreaseStock(4);
+
+        material.StockQuantity.ShouldBe(4);
+        material.Status.ShouldBe(EntityStatus.INACTIVE);
+    }
 }
