@@ -61,4 +61,25 @@ public class Vehicle
         Status = EntityStatus.INACTIVE;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void UpdateProfile(string brand, string model, Plate plate, int year)
+    {
+        if (PlateType == PlateType.MERCOSUL && plate.Value != Plate.Value)
+        {
+            throw new PlateUpdateNotAllowedException();
+        }
+
+        Brand = brand;
+        Model = model;
+        Plate = plate;
+        PlateType = plate.Type;
+        Year = year;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ChangeOwner(Guid customerId)
+    {
+        CustomerId = customerId;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
