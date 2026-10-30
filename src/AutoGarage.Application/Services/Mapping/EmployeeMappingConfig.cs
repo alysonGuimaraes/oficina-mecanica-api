@@ -1,4 +1,5 @@
-﻿using AutoGarage.Communication.Requests.Employees;
+﻿using AutoGarage.Application.Commands.Employees;
+using AutoGarage.Communication.Requests.Employees;
 using AutoGarage.Communication.Responses.Employees;
 using AutoGarage.Domain.Entities;
 using Mapster;
@@ -10,6 +11,7 @@ public class EmployeeMappingConfig : IRegister
     public void Register(TypeAdapterConfig config)
     {
         config.NewConfig<CreateEmployeeRequest, Employee>();
+        config.NewConfig<CreateEmployeeRequest, CreateEmployeeCommand>();
 
         config.NewConfig<Employee, EmployeeResponse>()
             .Map(dest => dest.Id, src => src.Id)
