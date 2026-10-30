@@ -30,6 +30,13 @@ public class ServiceRepository : IServiceReadOnlyRepository, IServiceWriteOnlyRe
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Service?> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.Services
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+    }
+
     public async Task Add(Service service, CancellationToken cancellationToken)
     {
         await _context.Services.AddAsync(service, cancellationToken);
