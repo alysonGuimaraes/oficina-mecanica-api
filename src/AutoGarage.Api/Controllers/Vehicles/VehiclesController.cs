@@ -1,5 +1,6 @@
 using AutoGarage.Application.Commands.Vehicles;
 using AutoGarage.Application.UseCases.Vehicles.CreateVehicle;
+using AutoGarage.Application.UseCases.Vehicles.GetVehicleById;
 using AutoGarage.Application.UseCases.Vehicles.ListVehicles;
 using AutoGarage.Communication.Requests.Vehicles;
 using AutoGarage.Communication.Responses.Vehicles;
@@ -33,6 +34,18 @@ public class VehiclesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await useCase.Handle(status, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(VehicleResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<VehicleResponse>> GetById(
+        [FromRoute] string id,
+        [FromServices] IGetVehicleByIdUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(id, cancellationToken);
 
         return Ok(result);
     }
