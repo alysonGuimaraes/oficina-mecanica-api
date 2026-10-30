@@ -23,6 +23,7 @@ using AutoGarage.Application.UseCases.Services.GetServiceById;
 using AutoGarage.Application.UseCases.Services.ListServices;
 using AutoGarage.Application.UseCases.Services.UpdateService;
 using AutoGarage.Application.UseCases.Services.UpdateServiceStatus;
+using AutoGarage.Application.UseCases.Materials.CreateMaterial;
 using Mapster;
 using MapsterMapper;
 using Microsoft.Extensions.Configuration;
@@ -72,6 +73,7 @@ public static class DependencyInjection
         services.AddScoped<IGetServiceByIdUseCase, GetServiceByIdUseCase>();
         services.AddScoped<IUpdateServiceUseCase, UpdateServiceUseCase>();
         services.AddScoped<IUpdateServiceStatusUseCase, UpdateServiceStatusUseCase>();
+        services.AddScoped<ICreateMaterialUseCase, CreateMaterialUseCase>();
     }
 
     private static void AddPasswordEncripter(IServiceCollection services, IConfiguration configuration)
