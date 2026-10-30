@@ -1,5 +1,6 @@
 using AutoGarage.Domain.Repositories;
 using AutoGarage.Domain.Repositories.Customers;
+using AutoGarage.Domain.Repositories.Vehicles;
 using AutoGarage.Application.Services.Authentication;
 using AutoGarage.Domain.Repositories.Employees;
 using AutoGarage.Infrastructure.Authentication;
@@ -68,6 +69,8 @@ public static class DependencyInjection
 
         services.AddScoped<ICustomerWriteOnlyRepository, CustomerRepository>();
         services.AddScoped<ICustomerReadOnlyRepository, CustomerRepository>();
+        services.AddScoped<IVehicleWriteOnlyRepository, VehicleRepository>();
+        services.AddScoped<IVehicleReadOnlyRepository, VehicleRepository>();
     }
 
     private static void AddFluentMigrator_Postgres(IServiceCollection services, IConfiguration configuration)

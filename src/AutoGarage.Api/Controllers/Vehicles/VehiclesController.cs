@@ -1,0 +1,108 @@
+using AutoGarage.Application.Commands.Vehicles;
+using AutoGarage.Application.UseCases.Vehicles.CreateVehicle;
+using AutoGarage.Application.UseCases.Vehicles.GetVehicleById;
+using AutoGarage.Application.UseCases.Vehicles.ListVehicles;
+using AutoGarage.Application.UseCases.Vehicles.TransferVehicleOwner;
+using AutoGarage.Application.UseCases.Vehicles.UpdateVehicleStatus;
+using AutoGarage.Application.UseCases.Vehicles.UpdateVehicle;
+using AutoGarage.Communication.Requests.Vehicles;
+using AutoGarage.Communication.Responses.Vehicles;
+using MapsterMapper;
+using Microsoft.AspNetCore.Mvc;
+
+namespace AutoGarage.Api.Controllers.Vehicles;
+
+[ApiController]
+[Route("api/vehicles")]
+public class VehiclesController : ControllerBase
+{
+    private readonly IMapper _mapper;
+
+    public VehiclesController(IMapper mapper)
+    {
+        _mapper = mapper;
+    }
+
+    [HttpPost]
+    [ProducesResponseType(typeof(VehicleResponse), StatusCodes.Status201Created)]
+    public async Task<ActionResult> Create(
+        [FromServices] ICreateVehicleUseCase useCase,
+        [FromBody] CreateVehicleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = _mapper.Map<CreateVehicleCommand>(request);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Created(string.Empty, result);
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<VehicleResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<VehicleResponse>>> List(
+        [FromQuery] string? status,
+        [FromServices] IListVehiclesUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(status, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(VehicleResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<VehicleResponse>> GetById(
+        [FromRoute] string id,
+        [FromServices] IGetVehicleByIdUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(id, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(VehicleResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<VehicleResponse>> Update(
+        [FromRoute] string id,
+        [FromBody] UpdateVehicleRequest request,
+        [FromServices] IUpdateVehicleUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateVehicleCommand(id, request.Brand, request.Model, request.Plate, request.Year);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPatch("{id}/owner")]
+    [ProducesResponseType(typeof(VehicleResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<VehicleResponse>> TransferOwner(
+        [FromRoute] string id,
+        [FromBody] TransferVehicleOwnerRequest request,
+        [FromServices] ITransferVehicleOwnerUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new TransferVehicleOwnerCommand(id, request.NewOwnerDocument);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPatch("{id}/status")]
+    [ProducesResponseType(typeof(VehicleResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<VehicleResponse>> UpdateStatus(
+        [FromRoute] string id,
+        [FromBody] UpdateVehicleStatusRequest request,
+        [FromServices] IUpdateVehicleStatusUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateVehicleStatusCommand(id, request.Status);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+}

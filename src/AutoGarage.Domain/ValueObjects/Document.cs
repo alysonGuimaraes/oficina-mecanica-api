@@ -1,13 +1,11 @@
+using AutoGarage.Domain.Common;
 using AutoGarage.Domain.Enums.Customers;
 using AutoGarage.Domain.Exceptions.Customers.Exceptions;
-using System.Text.RegularExpressions;
 
 namespace AutoGarage.Domain.ValueObjects;
 
 public sealed record Document
 {
-    private static readonly Regex NonAlphanumeric = new("[^A-Za-z0-9]", RegexOptions.Compiled);
-
     private static readonly int[] CpfWeights1 = [10, 9, 8, 7, 6, 5, 4, 3, 2];
     private static readonly int[] CpfWeights2 = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2];
     private static readonly int[] CnpjWeights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
@@ -15,7 +13,7 @@ public sealed record Document
 
     public Document(string value)
     {
-        var hygienized = NonAlphanumeric.Replace(value ?? string.Empty, string.Empty).ToUpperInvariant();
+        var hygienized = AlphanumericText.Hygienize(value);
 
         Type = hygienized.Length switch
         {

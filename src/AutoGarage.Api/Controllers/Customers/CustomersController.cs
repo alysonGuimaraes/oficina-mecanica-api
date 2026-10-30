@@ -7,6 +7,7 @@ using AutoGarage.Application.UseCases.Customers.UpdateCustomer;
 using AutoGarage.Application.UseCases.Customers.UpdateCustomerStatus;
 using AutoGarage.Communication.Requests.Customers;
 using AutoGarage.Communication.Responses.Customers;
+using MapsterMapper;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AutoGarage.Api.Controllers.Customers;
@@ -15,6 +16,13 @@ namespace AutoGarage.Api.Controllers.Customers;
 [Route("api/customers")]
 public class CustomersController : ControllerBase
 {
+    private readonly IMapper _mapper;
+
+    public CustomersController(IMapper mapper)
+    {
+        _mapper = mapper;
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(CustomerResponse), StatusCodes.Status201Created)]
     public async Task<ActionResult> Create(
@@ -22,7 +30,7 @@ public class CustomersController : ControllerBase
         [FromBody] CreateCustomerRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new CreateCustomerCommand(request.Name, request.Document, request.Email, request.Ddd, request.Phone);
+        var command = _mapper.Map<CreateCustomerCommand>(request);
 
         var result = await useCase.Handle(command, cancellationToken);
 
