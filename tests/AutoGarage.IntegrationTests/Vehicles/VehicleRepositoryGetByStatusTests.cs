@@ -112,9 +112,13 @@ public class VehicleRepositoryGetByStatusTests
     {
         var vehicle = Vehicle.Create("GOL", "1.0", new Plate(plate), 2020, VehicleType.CAR, customerId);
 
+        if (status == EntityStatus.INACTIVE)
+        {
+            vehicle.Deactivate();
+        }
+
         await using var context = CreateContext();
         context.Vehicles.Add(vehicle);
-        context.Entry(vehicle).Property(v => v.Status).CurrentValue = status;
 
         if (createdAt is not null)
         {

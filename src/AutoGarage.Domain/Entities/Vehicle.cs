@@ -1,4 +1,5 @@
 using AutoGarage.Domain.Enums.Vehicles;
+using AutoGarage.Domain.Exceptions.Vehicles.Exceptions;
 using AutoGarage.Domain.Shared;
 using AutoGarage.Domain.ValueObjects;
 
@@ -37,5 +38,27 @@ public class Vehicle
     public static Vehicle Create(string brand, string model, Plate plate, int year, VehicleType vehicleType, Guid customerId)
     {
         return new Vehicle(brand, model, plate, year, vehicleType, customerId);
+    }
+
+    public void Activate()
+    {
+        if (Status == EntityStatus.ACTIVE)
+        {
+            throw new VehicleAlreadyActiveException(Id);
+        }
+
+        Status = EntityStatus.ACTIVE;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Deactivate()
+    {
+        if (Status == EntityStatus.INACTIVE)
+        {
+            throw new VehicleAlreadyInactiveException(Id);
+        }
+
+        Status = EntityStatus.INACTIVE;
+        UpdatedAt = DateTime.UtcNow;
     }
 }

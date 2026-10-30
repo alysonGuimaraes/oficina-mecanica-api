@@ -8,7 +8,6 @@ using AutoGarage.Domain.Exceptions.Vehicles.Exceptions;
 using AutoGarage.Domain.Shared;
 using AutoGarage.Domain.ValueObjects;
 using Shouldly;
-using System.Reflection;
 
 namespace AutoGarage.Application.UnitTests.UseCases.Vehicles.ListVehicles;
 
@@ -80,10 +79,10 @@ public class ListVehiclesUseCaseTests
     {
         var vehicle = Vehicle.Create("GOL", "1.0", new Plate(plate), 2020, VehicleType.CAR, Guid.NewGuid());
 
-        // Vehicle ainda não tem método de inativação: o status de teste é definido direto, pois nenhum endpoint muda o status de veículo nesta fase.
-        typeof(Vehicle)
-            .GetProperty(nameof(Vehicle.Status), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!
-            .SetValue(vehicle, status);
+        if (status == EntityStatus.INACTIVE)
+        {
+            vehicle.Deactivate();
+        }
 
         return vehicle;
     }
