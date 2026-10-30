@@ -1,6 +1,7 @@
 using AutoGarage.Application.Commands.Materials;
 using AutoGarage.Application.UseCases.Materials.CreateMaterial;
 using AutoGarage.Application.UseCases.Materials.GetMaterialById;
+using AutoGarage.Application.UseCases.Materials.ListLowStockMaterials;
 using AutoGarage.Application.UseCases.Materials.ListMaterials;
 using AutoGarage.Communication.Requests.Materials;
 using AutoGarage.Communication.Responses.Materials;
@@ -39,6 +40,18 @@ public class MaterialsController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<MaterialResponse>>> List(
         [FromQuery] string? status,
         [FromServices] IListMaterialsUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(status, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("low-stock")]
+    [ProducesResponseType(typeof(IReadOnlyList<MaterialResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<MaterialResponse>>> ListLowStock(
+        [FromQuery] string? status,
+        [FromServices] IListLowStockMaterialsUseCase useCase,
         CancellationToken cancellationToken)
     {
         var result = await useCase.Handle(status, cancellationToken);
