@@ -62,6 +62,36 @@ public class MaterialTransactionRepositoryTests
         transactions[0].BalanceAfter.ShouldBe(5);
     }
 
+    [Fact]
+    public async Task StockOut_ShouldPersistDebitAndOutTransactionTogetherInOneSave()
+    {
+        var material = Material.Create("PARAFUSO", null, 2.50m, 3);
+        material.IncreaseStock(10);
+        await SaveMaterialAsync(material);
+
+        await using (var context = CreateContext())
+        {
+            var materialRepository = new MaterialRepository(context);
+            var loaded = await materialRepository.GetById(material.Id, CancellationToken.None);
+            loaded!.DecreaseStock(4);
+
+            await materialRepository.Update(loaded, CancellationToken.None);
+            await new MaterialTransactionRepository(context)
+                .Add(MaterialTransaction.Create(material.Id, TransactionType.OUT, 4, 6), CancellationToken.None);
+            await new WorkUnit(context).Commit();
+        }
+
+        await using var query = CreateContext();
+        var stored = await new MaterialRepository(query).GetById(material.Id, CancellationToken.None);
+        var transactions = await query.MaterialTransactions.ToListAsync();
+
+        stored!.StockQuantity.ShouldBe(6);
+        transactions.Count.ShouldBe(1);
+        transactions[0].Type.ShouldBe(TransactionType.OUT);
+        transactions[0].Quantity.ShouldBe(4);
+        transactions[0].BalanceAfter.ShouldBe(6);
+    }
+
     private AppDbContext CreateContext() =>
         new(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(_databaseName).Options);
 
