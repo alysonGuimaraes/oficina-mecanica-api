@@ -37,6 +37,19 @@ public class ServiceRepository : IServiceReadOnlyRepository, IServiceWriteOnlyRe
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
+    public async Task<bool> ExistsByNameExcludingId(string name, Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.Services
+            .AnyAsync(s => s.Id != id && s.Name == name, cancellationToken);
+    }
+
+    public Task Update(Service service, CancellationToken cancellationToken)
+    {
+        _context.Services.Update(service);
+
+        return Task.CompletedTask;
+    }
+
     public async Task Add(Service service, CancellationToken cancellationToken)
     {
         await _context.Services.AddAsync(service, cancellationToken);
