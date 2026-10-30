@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
 
     public DbSet<Service> Services { get; set; }
 
+    public DbSet<Material> Materials { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
