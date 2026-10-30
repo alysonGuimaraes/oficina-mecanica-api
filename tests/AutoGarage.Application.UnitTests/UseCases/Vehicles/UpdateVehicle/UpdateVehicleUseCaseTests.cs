@@ -3,12 +3,10 @@ using AutoGarage.Application.Services.Normalization;
 using AutoGarage.Application.UseCases.Vehicles.UpdateVehicle;
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.CommonTestUtilities.Repositories;
-using AutoGarage.CommonTestUtilities.Repositories.Customers;
 using AutoGarage.CommonTestUtilities.Repositories.Vehicles;
 using AutoGarage.Domain.Common.Exceptions;
 using AutoGarage.Domain.Entities;
 using AutoGarage.Domain.Enums.Vehicles;
-using AutoGarage.Domain.Exceptions.Customers.Exceptions;
 using AutoGarage.Domain.Exceptions.Vehicles.Exceptions;
 using AutoGarage.Domain.Shared;
 using AutoGarage.Domain.ValueObjects;
@@ -21,12 +19,11 @@ public class UpdateVehicleUseCaseTests
     [Fact]
     public async Task Handle_ValidCommand_ShouldUpdateVehicleAndCommit()
     {
-        var customer = CreateActiveCustomer("39053344705");
-        var vehicle = CreateOldVehicle(customer.Id);
-        var sut = CreateSut([customer], vehicle);
+        var vehicle = CreateOldVehicle();
+        var sut = CreateSut(vehicle);
 
         var result = await sut.UseCase.Handle(
-            new UpdateVehicleCommand(vehicle.Id.ToString(), "fiat", "uno", "abc-1d23", 2015, customer.Id.ToString()),
+            new UpdateVehicleCommand(vehicle.Id.ToString(), "fiat", "uno", "abc-1d23", 2015),
             CancellationToken.None);
 
         result.Brand.ShouldBe("FIAT");
@@ -38,14 +35,28 @@ public class UpdateVehicleUseCaseTests
     }
 
     [Fact]
-    public async Task Handle_SameMercosulPlateInOtherFormat_ShouldNotConflictWithItself()
+    public async Task Handle_CommandWithoutOwner_ShouldKeepCurrentOwner()
     {
-        var customer = CreateActiveCustomer("39053344705");
-        var vehicle = CreateMercosulVehicle(customer.Id);
-        var sut = CreateSut([customer], vehicle);
+        var vehicle = CreateOldVehicle();
+        var ownerId = vehicle.CustomerId;
+        var sut = CreateSut(vehicle);
 
         var result = await sut.UseCase.Handle(
-            new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "abc 1d23", 2020, customer.Id.ToString()),
+            new UpdateVehicleCommand(vehicle.Id.ToString(), "fiat", "uno", "XYZ9876", 2015),
+            CancellationToken.None);
+
+        result.CustomerId.ShouldBe(ownerId);
+        sut.UnitWork.CommitCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Handle_SameMercosulPlateInOtherFormat_ShouldNotConflictWithItself()
+    {
+        var vehicle = CreateMercosulVehicle();
+        var sut = CreateSut(vehicle);
+
+        var result = await sut.UseCase.Handle(
+            new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "abc 1d23", 2020),
             CancellationToken.None);
 
         result.Plate.ShouldBe("ABC1D23");
@@ -55,13 +66,12 @@ public class UpdateVehicleUseCaseTests
     [Fact]
     public async Task Handle_MercosulPlateChangedToAnotherPlate_ShouldThrowPlateUpdateNotAllowedException()
     {
-        var customer = CreateActiveCustomer("39053344705");
-        var vehicle = CreateMercosulVehicle(customer.Id);
-        var sut = CreateSut([customer], vehicle);
+        var vehicle = CreateMercosulVehicle();
+        var sut = CreateSut(vehicle);
 
         var exception = await Should.ThrowAsync<PlateUpdateNotAllowedException>(
             () => sut.UseCase.Handle(
-                new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "XYZ9876", 2020, customer.Id.ToString()),
+                new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "XYZ9876", 2020),
                 CancellationToken.None));
 
         exception.ErrorType.ShouldBe("plate-update-not-allowed");
@@ -73,13 +83,12 @@ public class UpdateVehicleUseCaseTests
     [Fact]
     public async Task Handle_MercosulPlateChangedToOldPlate_ShouldThrowPlateUpdateNotAllowedException()
     {
-        var customer = CreateActiveCustomer("39053344705");
-        var vehicle = CreateMercosulVehicle(customer.Id);
-        var sut = CreateSut([customer], vehicle);
+        var vehicle = CreateMercosulVehicle();
+        var sut = CreateSut(vehicle);
 
         var exception = await Should.ThrowAsync<PlateUpdateNotAllowedException>(
             () => sut.UseCase.Handle(
-                new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "ABC1234", 2020, customer.Id.ToString()),
+                new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "ABC1234", 2020),
                 CancellationToken.None));
 
         exception.ErrorType.ShouldBe("plate-update-not-allowed");
@@ -89,12 +98,11 @@ public class UpdateVehicleUseCaseTests
     [Fact]
     public async Task Handle_OldPlateChangedToAnotherOldPlate_ShouldUpdate()
     {
-        var customer = CreateActiveCustomer("39053344705");
-        var vehicle = CreateOldVehicle(customer.Id);
-        var sut = CreateSut([customer], vehicle);
+        var vehicle = CreateOldVehicle();
+        var sut = CreateSut(vehicle);
 
         var result = await sut.UseCase.Handle(
-            new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "XYZ9876", 2020, customer.Id.ToString()),
+            new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "XYZ9876", 2020),
             CancellationToken.None);
 
         result.Plate.ShouldBe("XYZ9876");
@@ -105,14 +113,13 @@ public class UpdateVehicleUseCaseTests
     [Fact]
     public async Task Handle_PlateOfAnotherVehicle_ShouldThrowDuplicateVehiclePlateException()
     {
-        var customer = CreateActiveCustomer("39053344705");
-        var vehicleA = CreateOldVehicle(customer.Id);
-        var vehicleB = CreateMercosulVehicle(customer.Id);
-        var sut = CreateSut([customer], vehicleA, vehicleB);
+        var vehicleA = CreateOldVehicle();
+        var vehicleB = CreateMercosulVehicle();
+        var sut = CreateSut(vehicleA, vehicleB);
 
         var exception = await Should.ThrowAsync<DuplicateVehiclePlateException>(
             () => sut.UseCase.Handle(
-                new UpdateVehicleCommand(vehicleA.Id.ToString(), "gol", "1.0", "abc1d23", 2020, customer.Id.ToString()),
+                new UpdateVehicleCommand(vehicleA.Id.ToString(), "gol", "1.0", "abc1d23", 2020),
                 CancellationToken.None));
 
         exception.ErrorType.ShouldBe("duplicate-vehicle-plate");
@@ -123,13 +130,12 @@ public class UpdateVehicleUseCaseTests
     [Fact]
     public async Task Handle_InvalidPlate_ShouldThrowInvalidPlateException()
     {
-        var customer = CreateActiveCustomer("39053344705");
-        var vehicle = CreateOldVehicle(customer.Id);
-        var sut = CreateSut([customer], vehicle);
+        var vehicle = CreateOldVehicle();
+        var sut = CreateSut(vehicle);
 
         var exception = await Should.ThrowAsync<InvalidPlateException>(
             () => sut.UseCase.Handle(
-                new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "ABC12345", 2020, customer.Id.ToString()),
+                new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "ABC12345", 2020),
                 CancellationToken.None));
 
         exception.ErrorType.ShouldBe("invalid-plate");
@@ -137,80 +143,13 @@ public class UpdateVehicleUseCaseTests
     }
 
     [Fact]
-    public async Task Handle_ChangeToActiveCustomer_ShouldChangeOwner()
-    {
-        var customerA = CreateActiveCustomer("39053344705");
-        var customerB = CreateActiveCustomer("12345678909");
-        var vehicle = CreateOldVehicle(customerA.Id);
-        var sut = CreateSut([customerA, customerB], vehicle);
-
-        var result = await sut.UseCase.Handle(
-            new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "ABC1234", 2020, customerB.Id.ToString()),
-            CancellationToken.None);
-
-        result.CustomerId.ShouldBe(customerB.Id);
-        sut.UnitWork.CommitCount.ShouldBe(1);
-    }
-
-    [Fact]
-    public async Task Handle_UnknownCustomer_ShouldThrowCustomerNotFoundException()
-    {
-        var customer = CreateActiveCustomer("39053344705");
-        var vehicle = CreateOldVehicle(customer.Id);
-        var sut = CreateSut([customer], vehicle);
-
-        var exception = await Should.ThrowAsync<CustomerNotFoundException>(
-            () => sut.UseCase.Handle(
-                new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "ABC1234", 2020, Guid.NewGuid().ToString()),
-                CancellationToken.None));
-
-        exception.ErrorType.ShouldBe("customer-not-found");
-        sut.UnitWork.CommitCount.ShouldBe(0);
-    }
-
-    [Fact]
-    public async Task Handle_InactiveCustomer_ShouldThrowVehicleOwnerInactiveException()
-    {
-        var customer = CreateActiveCustomer("39053344705");
-        customer.Deactivate();
-        var vehicle = CreateOldVehicle(customer.Id);
-        var sut = CreateSut([customer], vehicle);
-
-        var exception = await Should.ThrowAsync<VehicleOwnerInactiveException>(
-            () => sut.UseCase.Handle(
-                new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "ABC1234", 2020, customer.Id.ToString()),
-                CancellationToken.None));
-
-        exception.ErrorType.ShouldBe("vehicle-owner-inactive");
-        exception.ShouldBeAssignableTo<ConflictDomainException>();
-        sut.UnitWork.CommitCount.ShouldBe(0);
-    }
-
-    [Fact]
-    public async Task Handle_MalformedCustomerId_ShouldThrowInvalidCustomerIdException()
-    {
-        var customer = CreateActiveCustomer("39053344705");
-        var vehicle = CreateOldVehicle(customer.Id);
-        var sut = CreateSut([customer], vehicle);
-
-        var exception = await Should.ThrowAsync<InvalidCustomerIdException>(
-            () => sut.UseCase.Handle(
-                new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "ABC1234", 2020, "abc"),
-                CancellationToken.None));
-
-        exception.ErrorType.ShouldBe("invalid-customer-id");
-        sut.UnitWork.CommitCount.ShouldBe(0);
-    }
-
-    [Fact]
     public async Task Handle_MalformedId_ShouldThrowInvalidVehicleIdException()
     {
-        var customer = CreateActiveCustomer("39053344705");
-        var sut = CreateSut([customer]);
+        var sut = CreateSut();
 
         var exception = await Should.ThrowAsync<InvalidVehicleIdException>(
             () => sut.UseCase.Handle(
-                new UpdateVehicleCommand("abc", "gol", "1.0", "ABC1234", 2020, customer.Id.ToString()),
+                new UpdateVehicleCommand("abc", "gol", "1.0", "ABC1234", 2020),
                 CancellationToken.None));
 
         exception.ErrorType.ShouldBe("invalid-vehicle-id");
@@ -220,12 +159,11 @@ public class UpdateVehicleUseCaseTests
     [Fact]
     public async Task Handle_UnknownId_ShouldThrowVehicleNotFoundException()
     {
-        var customer = CreateActiveCustomer("39053344705");
-        var sut = CreateSut([customer]);
+        var sut = CreateSut();
 
         var exception = await Should.ThrowAsync<VehicleNotFoundException>(
             () => sut.UseCase.Handle(
-                new UpdateVehicleCommand(Guid.NewGuid().ToString(), "gol", "1.0", "ABC1234", 2020, customer.Id.ToString()),
+                new UpdateVehicleCommand(Guid.NewGuid().ToString(), "gol", "1.0", "ABC1234", 2020),
                 CancellationToken.None));
 
         exception.ErrorType.ShouldBe("vehicle-not-found");
@@ -235,13 +173,12 @@ public class UpdateVehicleUseCaseTests
     [Fact]
     public async Task Handle_InactiveVehicle_ShouldUpdateAndKeepStatus()
     {
-        var customer = CreateActiveCustomer("39053344705");
-        var vehicle = CreateOldVehicle(customer.Id);
+        var vehicle = CreateOldVehicle();
         vehicle.Deactivate();
-        var sut = CreateSut([customer], vehicle);
+        var sut = CreateSut(vehicle);
 
         var result = await sut.UseCase.Handle(
-            new UpdateVehicleCommand(vehicle.Id.ToString(), "fiat", "uno", "XYZ9876", 2015, customer.Id.ToString()),
+            new UpdateVehicleCommand(vehicle.Id.ToString(), "fiat", "uno", "XYZ9876", 2015),
             CancellationToken.None);
 
         result.Status.ShouldBe(EntityStatus.INACTIVE);
@@ -252,13 +189,12 @@ public class UpdateVehicleUseCaseTests
     [Fact]
     public async Task Handle_InvalidYear_ShouldThrowErrorOnValidationException()
     {
-        var customer = CreateActiveCustomer("39053344705");
-        var vehicle = CreateOldVehicle(customer.Id);
-        var sut = CreateSut([customer], vehicle);
+        var vehicle = CreateOldVehicle();
+        var sut = CreateSut(vehicle);
 
         var exception = await Should.ThrowAsync<ErrorOnValidationException>(
             () => sut.UseCase.Handle(
-                new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "ABC1234", 1899, customer.Id.ToString()),
+                new UpdateVehicleCommand(vehicle.Id.ToString(), "gol", "1.0", "ABC1234", 1899),
                 CancellationToken.None));
 
         exception.ErrorsMessages.ShouldContain($"The year field must be between 1900 and {DateTime.UtcNow.Year + 1}.");
@@ -272,34 +208,22 @@ public class UpdateVehicleUseCaseTests
 
         await Should.ThrowAsync<ErrorOnValidationException>(
             () => sut.UseCase.Handle(
-                new UpdateVehicleCommand(Guid.NewGuid().ToString(), "", "1.0", "ABC1234", 2020, Guid.NewGuid().ToString()),
+                new UpdateVehicleCommand(Guid.NewGuid().ToString(), "", "1.0", "ABC1234", 2020),
                 CancellationToken.None));
     }
 
-    private static Customer CreateActiveCustomer(string document)
+    private static Vehicle CreateOldVehicle()
     {
-        return Customer.Create("John", new Document(document), $"{document}@autogarage.com", "41", "999999999");
+        return Vehicle.Create("GOL", "1.0", new Plate("ABC1234"), 2020, VehicleType.CAR, Guid.NewGuid());
     }
 
-    private static Vehicle CreateOldVehicle(Guid customerId)
+    private static Vehicle CreateMercosulVehicle()
     {
-        return Vehicle.Create("GOL", "1.0", new Plate("ABC1234"), 2020, VehicleType.CAR, customerId);
+        return Vehicle.Create("GOL", "1.0", new Plate("ABC1D23"), 2020, VehicleType.CAR, Guid.NewGuid());
     }
 
-    private static Vehicle CreateMercosulVehicle(Guid customerId)
+    private static UpdateVehicleUseCaseSut CreateSut(params Vehicle[] vehicles)
     {
-        return Vehicle.Create("GOL", "1.0", new Plate("ABC1D23"), 2020, VehicleType.CAR, customerId);
-    }
-
-    private static UpdateVehicleUseCaseSut CreateSut(Customer[]? customers = null, params Vehicle[] vehicles)
-    {
-        var customerRepository = new FakeCustomerRepository();
-
-        foreach (var customer in customers ?? [])
-        {
-            customerRepository.WithCustomer(customer);
-        }
-
         var vehicleRepository = new FakeVehicleRepository();
 
         foreach (var vehicle in vehicles)
@@ -309,7 +233,7 @@ public class UpdateVehicleUseCaseTests
 
         var unitWork = new FakeUnitWork();
 
-        var useCase = new UpdateVehicleUseCase(vehicleRepository, vehicleRepository, customerRepository, unitWork, new StringNormalizer(), MapperBuilder.Build());
+        var useCase = new UpdateVehicleUseCase(vehicleRepository, vehicleRepository, unitWork, new StringNormalizer(), MapperBuilder.Build());
 
         return new UpdateVehicleUseCaseSut(useCase, unitWork);
     }

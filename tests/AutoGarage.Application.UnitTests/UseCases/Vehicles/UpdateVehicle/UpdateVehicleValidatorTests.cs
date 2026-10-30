@@ -62,21 +62,12 @@ public class UpdateVehicleValidatorTests
         result.Errors.Select(e => e.ErrorMessage).ShouldContain("The plate field is required.");
     }
 
-    [Fact]
-    public void Validate_EmptyCustomerId_ShouldReturnCustomerIdRequiredMessage()
-    {
-        var result = new UpdateVehicleValidator().Validate(CreateCommand(customerId: ""));
-
-        result.Errors.Select(e => e.ErrorMessage).ShouldContain("The customerId field is required.");
-    }
-
     private static UpdateVehicleCommand CreateCommand(
         string brand = "gol",
         string model = "1.0",
         string plate = "ABC1D23",
-        int year = 2020,
-        string? customerId = null)
+        int year = 2020)
     {
-        return new UpdateVehicleCommand(Guid.NewGuid().ToString(), brand, model, plate, year, customerId ?? Guid.NewGuid().ToString());
+        return new UpdateVehicleCommand(Guid.NewGuid().ToString(), brand, model, plate, year);
     }
 }

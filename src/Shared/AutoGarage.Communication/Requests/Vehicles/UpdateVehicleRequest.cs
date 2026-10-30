@@ -4,6 +4,5 @@ public record UpdateVehicleRequest(
     string Brand,
     string Model,
     string Plate,
-    int Year,
-    string CustomerId
+    int Year
 );

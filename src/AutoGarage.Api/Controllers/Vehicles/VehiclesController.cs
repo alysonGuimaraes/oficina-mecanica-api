@@ -59,7 +59,7 @@ public class VehiclesController : ControllerBase
         [FromServices] IUpdateVehicleUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var command = new UpdateVehicleCommand(id, request.Brand, request.Model, request.Plate, request.Year, request.CustomerId);
+        var command = new UpdateVehicleCommand(id, request.Brand, request.Model, request.Plate, request.Year);
 
         var result = await useCase.Handle(command, cancellationToken);
 

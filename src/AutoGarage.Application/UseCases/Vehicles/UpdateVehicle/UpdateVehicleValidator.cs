@@ -21,8 +21,5 @@ public class UpdateVehicleValidator : AbstractValidator<UpdateVehicleCommand>
         RuleFor(vehicle => vehicle.Year)
             .Must(year => year >= 1900 && year <= DateTime.UtcNow.Year + 1)
             .WithMessage(_ => $"The year field must be between 1900 and {DateTime.UtcNow.Year + 1}.");
-
-        RuleFor(vehicle => vehicle.CustomerId)
-            .NotEmpty().WithMessage("The customerId field is required.");
     }
 }
