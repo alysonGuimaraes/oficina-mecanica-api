@@ -23,6 +23,17 @@ using AutoGarage.Application.UseCases.Services.GetServiceById;
 using AutoGarage.Application.UseCases.Services.ListServices;
 using AutoGarage.Application.UseCases.Services.UpdateService;
 using AutoGarage.Application.UseCases.Services.UpdateServiceStatus;
+using AutoGarage.Application.UseCases.Materials.CreateMaterial;
+using AutoGarage.Application.UseCases.Materials.GetMaterialById;
+using AutoGarage.Application.UseCases.Materials.ListLowStockMaterials;
+using AutoGarage.Application.UseCases.Materials.ListMaterials;
+using AutoGarage.Application.UseCases.Materials.UpdateMaterial;
+using AutoGarage.Application.UseCases.Materials.UpdateMaterialStatus;
+using AutoGarage.Application.UseCases.Materials.StockEntry;
+using AutoGarage.Application.UseCases.Materials.StockOut;
+using AutoGarage.Application.UseCases.Materials.ListMaterialTransactions;
+using AutoGarage.Application.UseCases.MaterialTransactions.ListAllMaterialTransactions;
+using AutoGarage.Application.UseCases.MaterialTransactions.GetMaterialTransactionById;
 using Mapster;
 using MapsterMapper;
 using Microsoft.Extensions.Configuration;
@@ -72,6 +83,17 @@ public static class DependencyInjection
         services.AddScoped<IGetServiceByIdUseCase, GetServiceByIdUseCase>();
         services.AddScoped<IUpdateServiceUseCase, UpdateServiceUseCase>();
         services.AddScoped<IUpdateServiceStatusUseCase, UpdateServiceStatusUseCase>();
+        services.AddScoped<ICreateMaterialUseCase, CreateMaterialUseCase>();
+        services.AddScoped<IListMaterialsUseCase, ListMaterialsUseCase>();
+        services.AddScoped<IGetMaterialByIdUseCase, GetMaterialByIdUseCase>();
+        services.AddScoped<IListLowStockMaterialsUseCase, ListLowStockMaterialsUseCase>();
+        services.AddScoped<IUpdateMaterialUseCase, UpdateMaterialUseCase>();
+        services.AddScoped<IUpdateMaterialStatusUseCase, UpdateMaterialStatusUseCase>();
+        services.AddScoped<IStockEntryUseCase, StockEntryUseCase>();
+        services.AddScoped<IStockOutUseCase, StockOutUseCase>();
+        services.AddScoped<IListMaterialTransactionsUseCase, ListMaterialTransactionsUseCase>();
+        services.AddScoped<IListAllMaterialTransactionsUseCase, ListAllMaterialTransactionsUseCase>();
+        services.AddScoped<IGetMaterialTransactionByIdUseCase, GetMaterialTransactionByIdUseCase>();
     }
 
     private static void AddPasswordEncripter(IServiceCollection services, IConfiguration configuration)

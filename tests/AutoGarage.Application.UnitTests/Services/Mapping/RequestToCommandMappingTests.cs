@@ -1,12 +1,14 @@
 using AutoGarage.Application.Commands.Auth;
 using AutoGarage.Application.Commands.Customers;
 using AutoGarage.Application.Commands.Employees;
+using AutoGarage.Application.Commands.Materials;
 using AutoGarage.Application.Commands.Services;
 using AutoGarage.Application.Commands.Vehicles;
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.Communication.Requests.Auth;
 using AutoGarage.Communication.Requests.Customers;
 using AutoGarage.Communication.Requests.Employees;
+using AutoGarage.Communication.Requests.Materials;
 using AutoGarage.Communication.Requests.Services;
 using AutoGarage.Communication.Requests.Vehicles;
 using AutoGarage.Domain.Enums.Employees;
@@ -84,5 +86,18 @@ public class RequestToCommandMappingTests
         command.Email.ShouldBe("jane@autogarage.com");
         command.Password.ShouldBe("senha123");
         command.Role.ShouldBe(EmployeeRole.ATTENDANT);
+    }
+
+    [Fact]
+    public void Map_CreateMaterialRequest_ShouldKeepValuesUnchanged()
+    {
+        var request = new CreateMaterialRequest("  Parafuso  ", "  Aco  ", 2.50m, 3);
+
+        var command = _mapper.Map<CreateMaterialCommand>(request);
+
+        command.Name.ShouldBe("  Parafuso  ");
+        command.Description.ShouldBe("  Aco  ");
+        command.Price.ShouldBe(2.50m);
+        command.StockMinimum.ShouldBe(3);
     }
 }
