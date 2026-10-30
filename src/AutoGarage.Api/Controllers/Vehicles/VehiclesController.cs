@@ -2,6 +2,7 @@ using AutoGarage.Application.Commands.Vehicles;
 using AutoGarage.Application.UseCases.Vehicles.CreateVehicle;
 using AutoGarage.Application.UseCases.Vehicles.GetVehicleById;
 using AutoGarage.Application.UseCases.Vehicles.ListVehicles;
+using AutoGarage.Application.UseCases.Vehicles.UpdateVehicle;
 using AutoGarage.Communication.Requests.Vehicles;
 using AutoGarage.Communication.Responses.Vehicles;
 using Microsoft.AspNetCore.Mvc;
@@ -46,6 +47,21 @@ public class VehiclesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await useCase.Handle(id, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(VehicleResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<VehicleResponse>> Update(
+        [FromRoute] string id,
+        [FromBody] UpdateVehicleRequest request,
+        [FromServices] IUpdateVehicleUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateVehicleCommand(id, request.Brand, request.Model, request.Plate, request.Year, request.CustomerId);
+
+        var result = await useCase.Handle(command, cancellationToken);
 
         return Ok(result);
     }
