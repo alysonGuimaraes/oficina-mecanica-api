@@ -70,4 +70,15 @@ public class Material
         StockQuantity += quantity;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void DecreaseStock(int quantity)
+    {
+        if (StockQuantity < quantity)
+        {
+            throw new InsufficientStockException(Id);
+        }
+
+        StockQuantity -= quantity;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

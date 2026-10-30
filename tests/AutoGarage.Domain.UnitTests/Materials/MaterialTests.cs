@@ -154,4 +154,54 @@ public class MaterialTests
         material.StockQuantity.ShouldBe(4);
         material.Status.ShouldBe(EntityStatus.INACTIVE);
     }
+
+    [Fact]
+    public void DecreaseStock_SufficientStock_ShouldDecreaseAndSetUpdatedAt()
+    {
+        var material = Material.Create("PARAFUSO", null, 2.50m, 3);
+        material.IncreaseStock(10);
+
+        material.DecreaseStock(4);
+
+        material.StockQuantity.ShouldBe(6);
+        material.UpdatedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void DecreaseStock_ExactBalance_ShouldLeaveZeroStock()
+    {
+        var material = Material.Create("PARAFUSO", null, 2.50m, 3);
+        material.IncreaseStock(6);
+
+        material.DecreaseStock(6);
+
+        material.StockQuantity.ShouldBe(0);
+    }
+
+    [Fact]
+    public void DecreaseStock_InsufficientStock_ShouldThrowInsufficientStockExceptionAndKeepStock()
+    {
+        var material = Material.Create("PARAFUSO", null, 2.50m, 3);
+        material.IncreaseStock(6);
+        var updatedAtBefore = material.UpdatedAt;
+
+        var exception = Should.Throw<InsufficientStockException>(() => material.DecreaseStock(7));
+
+        exception.ErrorType.ShouldBe("insufficient-stock");
+        material.StockQuantity.ShouldBe(6);
+        material.UpdatedAt.ShouldBe(updatedAtBefore);
+    }
+
+    [Fact]
+    public void DecreaseStock_InactiveMaterial_ShouldDecreaseAndKeepInactiveStatus()
+    {
+        var material = Material.Create("PARAFUSO", null, 2.50m, 3);
+        material.IncreaseStock(6);
+        material.Deactivate();
+
+        material.DecreaseStock(2);
+
+        material.StockQuantity.ShouldBe(4);
+        material.Status.ShouldBe(EntityStatus.INACTIVE);
+    }
 }
