@@ -3,6 +3,7 @@ using AutoGarage.Application.UseCases.Materials.CreateMaterial;
 using AutoGarage.Application.UseCases.Materials.GetMaterialById;
 using AutoGarage.Application.UseCases.Materials.ListLowStockMaterials;
 using AutoGarage.Application.UseCases.Materials.ListMaterials;
+using AutoGarage.Application.UseCases.Materials.UpdateMaterial;
 using AutoGarage.Communication.Requests.Materials;
 using AutoGarage.Communication.Responses.Materials;
 using MapsterMapper;
@@ -67,6 +68,21 @@ public class MaterialsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await useCase.Handle(id, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(MaterialResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<MaterialResponse>> Update(
+        [FromRoute] string id,
+        [FromBody] UpdateMaterialRequest request,
+        [FromServices] IUpdateMaterialUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateMaterialCommand(id, request.Name, request.Description, request.Price, request.StockMinimum);
+
+        var result = await useCase.Handle(command, cancellationToken);
 
         return Ok(result);
     }
