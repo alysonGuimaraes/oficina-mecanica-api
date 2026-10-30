@@ -5,6 +5,7 @@ using AutoGarage.Application.UseCases.Materials.ListLowStockMaterials;
 using AutoGarage.Application.UseCases.Materials.ListMaterials;
 using AutoGarage.Application.UseCases.Materials.UpdateMaterial;
 using AutoGarage.Application.UseCases.Materials.StockEntry;
+using AutoGarage.Application.UseCases.Materials.ListMaterialTransactions;
 using AutoGarage.Application.UseCases.Materials.StockOut;
 using AutoGarage.Application.UseCases.Materials.UpdateMaterialStatus;
 using AutoGarage.Communication.Requests.Materials;
@@ -131,6 +132,19 @@ public class MaterialsController : ControllerBase
         var command = new StockOutCommand(id, request.Quantity);
 
         var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("{id}/transactions")]
+    [ProducesResponseType(typeof(IReadOnlyList<MaterialTransactionResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<MaterialTransactionResponse>>> ListTransactions(
+        [FromRoute] string id,
+        [FromQuery] string? type,
+        [FromServices] IListMaterialTransactionsUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(id, type, cancellationToken);
 
         return Ok(result);
     }
