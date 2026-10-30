@@ -93,4 +93,42 @@ public class MaterialTests
 
         Should.Throw<MaterialAlreadyInactiveException>(() => material.Deactivate());
     }
+
+    [Fact]
+    public void UpdateProfile_ValidValues_ShouldChangeFieldsKeepStockAndSetUpdatedAt()
+    {
+        var material = Material.Create("PARAFUSO", null, 2.50m, 3);
+
+        material.UpdateProfile("PORCA SEXTAVADA", "Aço inox", 4.00m, 5);
+
+        material.Name.ShouldBe("PORCA SEXTAVADA");
+        material.Description.ShouldBe("Aço inox");
+        material.Price.ShouldBe(4.00m);
+        material.StockMinimum.ShouldBe(5);
+        material.StockQuantity.ShouldBe(0);
+        material.UpdatedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void UpdateProfile_NullDescription_ShouldClearDescription()
+    {
+        var material = Material.Create("PARAFUSO", "Antiga", 2.50m, 3);
+
+        material.UpdateProfile("PARAFUSO", null, 2.50m, 3);
+
+        material.Description.ShouldBeNull();
+    }
+
+    [Fact]
+    public void UpdateProfile_InactiveMaterial_ShouldKeepInactiveStatus()
+    {
+        var material = Material.Create("PARAFUSO", null, 2.50m, 3);
+        material.Deactivate();
+
+        material.UpdateProfile("PARAFUSO", null, 3.00m, 3);
+
+        material.Status.ShouldBe(EntityStatus.INACTIVE);
+        material.Price.ShouldBe(3.00m);
+        material.UpdatedAt.ShouldNotBeNull();
+    }
 }

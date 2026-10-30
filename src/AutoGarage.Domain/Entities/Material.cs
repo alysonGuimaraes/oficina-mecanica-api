@@ -55,4 +55,13 @@ public class Material
         Status = EntityStatus.INACTIVE;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void UpdateProfile(string name, string? description, decimal price, int stockMinimum)
+    {
+        Name = name;
+        Description = description;
+        Price = price;
+        StockMinimum = stockMinimum;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
