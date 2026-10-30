@@ -37,6 +37,16 @@ public class MaterialRepository : IMaterialReadOnlyRepository, IMaterialWriteOnl
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Material>> GetLowStockByStatus(EntityStatus status, CancellationToken cancellationToken)
+    {
+        return await _context.Materials
+            .AsNoTracking()
+            .Where(m => m.Status == status && m.StockQuantity < m.StockMinimum)
+            .OrderBy(m => m.CreatedAt)
+            .ThenBy(m => m.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task Add(Material material, CancellationToken cancellationToken)
     {
         await _context.Materials.AddAsync(material, cancellationToken);
