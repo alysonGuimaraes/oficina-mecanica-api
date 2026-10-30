@@ -1,5 +1,6 @@
 using AutoGarage.Domain.Entities;
 using AutoGarage.Domain.Repositories.Materials;
+using AutoGarage.Domain.Shared;
 
 namespace AutoGarage.CommonTestUtilities.Repositories.Materials;
 
@@ -23,6 +24,17 @@ public class FakeMaterialRepository : IMaterialReadOnlyRepository, IMaterialWrit
         var exists = _materials.Any(m => m.Name == name);
 
         return Task.FromResult(exists);
+    }
+
+    public Task<IReadOnlyList<Material>> GetByStatus(EntityStatus status, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Material> ordered = _materials
+            .Where(m => m.Status == status)
+            .OrderBy(m => m.CreatedAt)
+            .ThenBy(m => m.Id)
+            .ToList();
+
+        return Task.FromResult(ordered);
     }
 
     public Task Add(Material material, CancellationToken cancellationToken)
