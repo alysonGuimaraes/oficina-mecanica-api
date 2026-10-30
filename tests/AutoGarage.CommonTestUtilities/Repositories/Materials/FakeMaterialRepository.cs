@@ -37,6 +37,11 @@ public class FakeMaterialRepository : IMaterialReadOnlyRepository, IMaterialWrit
         return Task.FromResult(ordered);
     }
 
+    public Task<Material?> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(_materials.FirstOrDefault(m => m.Id == id));
+    }
+
     public Task Add(Material material, CancellationToken cancellationToken)
     {
         _materials.Add(material);
