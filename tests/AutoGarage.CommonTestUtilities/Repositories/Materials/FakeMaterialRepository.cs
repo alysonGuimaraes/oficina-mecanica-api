@@ -26,6 +26,13 @@ public class FakeMaterialRepository : IMaterialReadOnlyRepository, IMaterialWrit
         return Task.FromResult(exists);
     }
 
+    public Task<bool> ExistsByNameExcludingId(string name, Guid id, CancellationToken cancellationToken)
+    {
+        var exists = _materials.Any(m => m.Id != id && m.Name == name);
+
+        return Task.FromResult(exists);
+    }
+
     public Task<IReadOnlyList<Material>> GetByStatus(EntityStatus status, CancellationToken cancellationToken)
     {
         IReadOnlyList<Material> ordered = _materials
@@ -57,6 +64,11 @@ public class FakeMaterialRepository : IMaterialReadOnlyRepository, IMaterialWrit
     {
         _materials.Add(material);
 
+        return Task.CompletedTask;
+    }
+
+    public Task Update(Material material, CancellationToken cancellationToken)
+    {
         return Task.CompletedTask;
     }
 }
