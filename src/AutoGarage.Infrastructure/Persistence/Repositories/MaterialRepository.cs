@@ -30,6 +30,13 @@ public class MaterialRepository : IMaterialReadOnlyRepository, IMaterialWriteOnl
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Material?> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.Materials
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
+    }
+
     public async Task Add(Material material, CancellationToken cancellationToken)
     {
         await _context.Materials.AddAsync(material, cancellationToken);
