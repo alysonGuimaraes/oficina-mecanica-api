@@ -42,6 +42,17 @@ public class FakeMaterialRepository : IMaterialReadOnlyRepository, IMaterialWrit
         return Task.FromResult(_materials.FirstOrDefault(m => m.Id == id));
     }
 
+    public Task<IReadOnlyList<Material>> GetLowStockByStatus(EntityStatus status, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Material> ordered = _materials
+            .Where(m => m.Status == status && m.StockQuantity < m.StockMinimum)
+            .OrderBy(m => m.CreatedAt)
+            .ThenBy(m => m.Id)
+            .ToList();
+
+        return Task.FromResult(ordered);
+    }
+
     public Task Add(Material material, CancellationToken cancellationToken)
     {
         _materials.Add(material);
