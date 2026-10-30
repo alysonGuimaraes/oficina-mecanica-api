@@ -1,5 +1,6 @@
 using AutoGarage.Application.Commands.Materials;
 using AutoGarage.Application.UseCases.Materials.CreateMaterial;
+using AutoGarage.Application.UseCases.Materials.ListMaterials;
 using AutoGarage.Communication.Requests.Materials;
 using AutoGarage.Communication.Responses.Materials;
 using MapsterMapper;
@@ -30,5 +31,17 @@ public class MaterialsController : ControllerBase
         var result = await useCase.Handle(command, cancellationToken);
 
         return Created(string.Empty, result);
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<MaterialResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<MaterialResponse>>> List(
+        [FromQuery] string? status,
+        [FromServices] IListMaterialsUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(status, cancellationToken);
+
+        return Ok(result);
     }
 }
