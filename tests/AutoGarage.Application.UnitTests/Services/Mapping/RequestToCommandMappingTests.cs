@@ -1,11 +1,13 @@
 using AutoGarage.Application.Commands.Auth;
 using AutoGarage.Application.Commands.Customers;
 using AutoGarage.Application.Commands.Employees;
+using AutoGarage.Application.Commands.Services;
 using AutoGarage.Application.Commands.Vehicles;
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.Communication.Requests.Auth;
 using AutoGarage.Communication.Requests.Customers;
 using AutoGarage.Communication.Requests.Employees;
+using AutoGarage.Communication.Requests.Services;
 using AutoGarage.Communication.Requests.Vehicles;
 using AutoGarage.Domain.Enums.Employees;
 using AutoGarage.Domain.Enums.Vehicles;
@@ -57,6 +59,18 @@ public class RequestToCommandMappingTests
         command.Year.ShouldBe(2020);
         command.VehicleType.ShouldBe(VehicleType.MOTORCYCLE);
         command.CustomerId.ShouldBe(customerId);
+    }
+
+    [Fact]
+    public void Map_CreateServiceRequest_ShouldKeepValuesUnchanged()
+    {
+        var request = new CreateServiceRequest("  Troca  ", "  Com filtro  ", 150.50m);
+
+        var command = _mapper.Map<CreateServiceCommand>(request);
+
+        command.Name.ShouldBe("  Troca  ");
+        command.Description.ShouldBe("  Com filtro  ");
+        command.Price.ShouldBe(150.50m);
     }
 
     [Fact]
