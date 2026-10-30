@@ -3,6 +3,7 @@ using AutoGarage.Application.UseCases.Services.CreateService;
 using AutoGarage.Application.UseCases.Services.GetServiceById;
 using AutoGarage.Application.UseCases.Services.ListServices;
 using AutoGarage.Application.UseCases.Services.UpdateService;
+using AutoGarage.Application.UseCases.Services.UpdateServiceStatus;
 using AutoGarage.Communication.Requests.Services;
 using AutoGarage.Communication.Responses.Services;
 using MapsterMapper;
@@ -68,6 +69,21 @@ public class ServicesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new UpdateServiceCommand(id, request.Name, request.Description, request.Price);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPatch("{id}/status")]
+    [ProducesResponseType(typeof(ServiceResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ServiceResponse>> UpdateStatus(
+        [FromRoute] string id,
+        [FromBody] UpdateServiceStatusRequest request,
+        [FromServices] IUpdateServiceStatusUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateServiceStatusCommand(id, request.Status);
 
         var result = await useCase.Handle(command, cancellationToken);
 
