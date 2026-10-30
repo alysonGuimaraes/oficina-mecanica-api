@@ -1,5 +1,6 @@
 using AutoGarage.Application.Commands.Vehicles;
 using AutoGarage.Application.UseCases.Vehicles.CreateVehicle;
+using AutoGarage.Application.UseCases.Vehicles.ListVehicles;
 using AutoGarage.Communication.Requests.Vehicles;
 using AutoGarage.Communication.Responses.Vehicles;
 using Microsoft.AspNetCore.Mvc;
@@ -22,5 +23,17 @@ public class VehiclesController : ControllerBase
         var result = await useCase.Handle(command, cancellationToken);
 
         return Created(string.Empty, result);
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<VehicleResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<VehicleResponse>>> List(
+        [FromQuery] string? status,
+        [FromServices] IListVehiclesUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(status, cancellationToken);
+
+        return Ok(result);
     }
 }
