@@ -1,5 +1,5 @@
 using AutoGarage.Domain.Entities;
-using AutoGarage.Domain.Enums.Materials;
+using AutoGarage.Domain.Enums.MaterialTransactions;
 using Shouldly;
 
 namespace AutoGarage.Domain.UnitTests.Materials;

@@ -1,4 +1,4 @@
-namespace AutoGarage.Domain.Enums.Materials;
+namespace AutoGarage.Domain.Enums.MaterialTransactions;
 
 public enum TransactionType
 {

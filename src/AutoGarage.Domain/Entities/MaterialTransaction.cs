@@ -1,4 +1,4 @@
-using AutoGarage.Domain.Enums.Materials;
+using AutoGarage.Domain.Enums.MaterialTransactions;
 
 namespace AutoGarage.Domain.Entities;
 

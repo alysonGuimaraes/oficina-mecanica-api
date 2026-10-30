@@ -1,7 +1,7 @@
 using AutoGarage.Domain.Entities;
-using AutoGarage.Domain.Enums.Materials;
+using AutoGarage.Domain.Enums.MaterialTransactions;
 
-namespace AutoGarage.Domain.Repositories.Materials;
+namespace AutoGarage.Domain.Repositories.MaterialTransactions;
 
 public interface IMaterialTransactionReadOnlyRepository
 {

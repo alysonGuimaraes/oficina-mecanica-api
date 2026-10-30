@@ -1,6 +1,6 @@
 using AutoGarage.Domain.Entities;
 
-namespace AutoGarage.Domain.Repositories.Materials;
+namespace AutoGarage.Domain.Repositories.MaterialTransactions;
 
 public interface IMaterialTransactionWriteOnlyRepository
 {

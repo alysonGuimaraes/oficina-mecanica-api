@@ -2,10 +2,11 @@ using AutoGarage.Application.Commands.Materials;
 using AutoGarage.Communication.Responses.Materials;
 using AutoGarage.Domain.Common.Exceptions;
 using AutoGarage.Domain.Entities;
-using AutoGarage.Domain.Enums.Materials;
+using AutoGarage.Domain.Enums.MaterialTransactions;
 using AutoGarage.Domain.Exceptions.Materials.Exceptions;
 using AutoGarage.Domain.Repositories;
 using AutoGarage.Domain.Repositories.Materials;
+using AutoGarage.Domain.Repositories.MaterialTransactions;
 using MapsterMapper;
 
 namespace AutoGarage.Application.UseCases.Materials.StockEntry;

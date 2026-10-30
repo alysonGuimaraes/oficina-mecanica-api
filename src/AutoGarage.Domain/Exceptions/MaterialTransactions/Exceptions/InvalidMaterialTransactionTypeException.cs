@@ -1,4 +1,4 @@
-namespace AutoGarage.Domain.Exceptions.Materials.Exceptions;
+namespace AutoGarage.Domain.Exceptions.MaterialTransactions.Exceptions;
 
 using AutoGarage.Domain.Common.Exceptions;
 

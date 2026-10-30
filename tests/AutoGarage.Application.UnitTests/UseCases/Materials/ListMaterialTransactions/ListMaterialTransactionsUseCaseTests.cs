@@ -2,8 +2,9 @@ using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.CommonTestUtilities.Repositories.Materials;
 using AutoGarage.Application.UseCases.Materials.ListMaterialTransactions;
 using AutoGarage.Domain.Entities;
-using AutoGarage.Domain.Enums.Materials;
+using AutoGarage.Domain.Enums.MaterialTransactions;
 using AutoGarage.Domain.Exceptions.Materials.Exceptions;
+using AutoGarage.Domain.Exceptions.MaterialTransactions.Exceptions;
 using Shouldly;
 
 namespace AutoGarage.Application.UnitTests.UseCases.Materials.ListMaterialTransactions;

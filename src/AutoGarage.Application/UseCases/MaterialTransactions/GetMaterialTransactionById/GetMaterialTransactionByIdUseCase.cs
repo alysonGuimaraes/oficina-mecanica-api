@@ -1,6 +1,6 @@
 using AutoGarage.Communication.Responses.Materials;
 using AutoGarage.Domain.Exceptions.MaterialTransactions.Exceptions;
-using AutoGarage.Domain.Repositories.Materials;
+using AutoGarage.Domain.Repositories.MaterialTransactions;
 using MapsterMapper;
 
 namespace AutoGarage.Application.UseCases.MaterialTransactions.GetMaterialTransactionById;

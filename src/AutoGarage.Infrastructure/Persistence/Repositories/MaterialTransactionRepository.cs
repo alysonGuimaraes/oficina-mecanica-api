@@ -1,6 +1,6 @@
 using AutoGarage.Domain.Entities;
-using AutoGarage.Domain.Enums.Materials;
-using AutoGarage.Domain.Repositories.Materials;
+using AutoGarage.Domain.Enums.MaterialTransactions;
+using AutoGarage.Domain.Repositories.MaterialTransactions;
 using Microsoft.EntityFrameworkCore;
 
 namespace AutoGarage.Infrastructure.Persistence.Repositories;

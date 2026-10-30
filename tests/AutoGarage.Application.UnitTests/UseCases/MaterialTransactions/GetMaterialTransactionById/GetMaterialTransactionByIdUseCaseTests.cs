@@ -2,7 +2,7 @@ using AutoGarage.Application.UseCases.MaterialTransactions.GetMaterialTransactio
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.CommonTestUtilities.Repositories.Materials;
 using AutoGarage.Domain.Entities;
-using AutoGarage.Domain.Enums.Materials;
+using AutoGarage.Domain.Enums.MaterialTransactions;
 using AutoGarage.Domain.Exceptions.MaterialTransactions.Exceptions;
 using Shouldly;
 

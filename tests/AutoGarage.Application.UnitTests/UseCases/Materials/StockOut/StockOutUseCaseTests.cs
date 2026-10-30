@@ -5,7 +5,7 @@ using AutoGarage.CommonTestUtilities.Repositories;
 using AutoGarage.CommonTestUtilities.Repositories.Materials;
 using AutoGarage.Domain.Common.Exceptions;
 using AutoGarage.Domain.Entities;
-using AutoGarage.Domain.Enums.Materials;
+using AutoGarage.Domain.Enums.MaterialTransactions;
 using AutoGarage.Domain.Exceptions.Materials.Exceptions;
 using AutoGarage.Domain.Shared;
 using Shouldly;

@@ -5,6 +5,7 @@ using AutoGarage.Application.Services.Authentication;
 using AutoGarage.Domain.Repositories.Employees;
 using AutoGarage.Domain.Repositories.Services;
 using AutoGarage.Domain.Repositories.Materials;
+using AutoGarage.Domain.Repositories.MaterialTransactions;
 using AutoGarage.Infrastructure.Authentication;
 using AutoGarage.Infrastructure.Persistence;
 using AutoGarage.Infrastructure.Persistence.Repositories;

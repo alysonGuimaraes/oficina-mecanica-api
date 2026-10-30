@@ -1,8 +1,10 @@
 using AutoGarage.Application.Services.Transactions;
 using AutoGarage.Communication.Responses.Materials;
-using AutoGarage.Domain.Enums.Materials;
+using AutoGarage.Domain.Enums.MaterialTransactions;
 using AutoGarage.Domain.Exceptions.Materials.Exceptions;
+using AutoGarage.Domain.Exceptions.MaterialTransactions.Exceptions;
 using AutoGarage.Domain.Repositories.Materials;
+using AutoGarage.Domain.Repositories.MaterialTransactions;
 using MapsterMapper;
 
 namespace AutoGarage.Application.UseCases.Materials.ListMaterialTransactions;

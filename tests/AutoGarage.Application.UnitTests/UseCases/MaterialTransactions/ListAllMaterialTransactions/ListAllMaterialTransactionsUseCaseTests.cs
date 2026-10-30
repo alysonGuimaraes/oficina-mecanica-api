@@ -2,8 +2,8 @@ using AutoGarage.Application.UseCases.MaterialTransactions.ListAllMaterialTransa
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.CommonTestUtilities.Repositories.Materials;
 using AutoGarage.Domain.Entities;
-using AutoGarage.Domain.Enums.Materials;
-using AutoGarage.Domain.Exceptions.Materials.Exceptions;
+using AutoGarage.Domain.Enums.MaterialTransactions;
+using AutoGarage.Domain.Exceptions.MaterialTransactions.Exceptions;
 using Shouldly;
 
 namespace AutoGarage.Application.UnitTests.UseCases.MaterialTransactions.ListAllMaterialTransactions;
