@@ -1,5 +1,6 @@
 using AutoGarage.Application.Commands.Services;
 using AutoGarage.Application.UseCases.Services.CreateService;
+using AutoGarage.Application.UseCases.Services.GetServiceById;
 using AutoGarage.Application.UseCases.Services.ListServices;
 using AutoGarage.Communication.Requests.Services;
 using AutoGarage.Communication.Responses.Services;
@@ -41,6 +42,18 @@ public class ServicesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await useCase.Handle(status, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(ServiceResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ServiceResponse>> GetById(
+        [FromRoute] string id,
+        [FromServices] IGetServiceByIdUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(id, cancellationToken);
 
         return Ok(result);
     }
