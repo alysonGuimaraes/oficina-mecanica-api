@@ -15,7 +15,7 @@ public class CreateMaterialValidator : AbstractValidator<CreateMaterialCommand>
             .MaximumLength(500).WithMessage("The description field must have at most 500 characters.");
 
         RuleFor(material => material.Price)
-            .GreaterThanOrEqualTo(0).WithMessage("The price field must not be negative.")
+            .GreaterThan(0).WithMessage("The price field must be greater than zero.")
             .Must(price => decimal.Round(price, 2) == price).WithMessage("The price field must have at most 2 decimal places.")
             .LessThan(100000000m).WithMessage("The price field must be less than 100000000.");
 

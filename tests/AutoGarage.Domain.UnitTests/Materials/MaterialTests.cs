@@ -31,11 +31,11 @@ public class MaterialTests
     }
 
     [Fact]
-    public void Create_ZeroPriceAndMinimum_ShouldBeAccepted()
+    public void Create_ZeroStockMinimum_ShouldBeAccepted()
     {
-        var material = Material.Create("PARAFUSO", null, 0m, 0);
+        var material = Material.Create("PARAFUSO", null, 1m, 0);
 
-        material.Price.ShouldBe(0m);
+        material.Price.ShouldBe(1m);
         material.StockMinimum.ShouldBe(0);
         material.StockQuantity.ShouldBe(0);
     }

@@ -25,14 +25,15 @@ public class CreateMaterialValidatorTests
     }
 
     [Theory]
+    [InlineData(0)]
     [InlineData(-0.01)]
     [InlineData(-1)]
-    public void Validate_NegativePrice_ShouldFail(decimal price)
+    public void Validate_PriceNotGreaterThanZero_ShouldFail(decimal price)
     {
         var result = new CreateMaterialValidator().Validate(new CreateMaterialCommand("PARAFUSO", null, price, 3));
 
         result.IsValid.ShouldBeFalse();
-        result.Errors.Select(e => e.ErrorMessage).ShouldContain("The price field must not be negative.");
+        result.Errors.Select(e => e.ErrorMessage).ShouldContain("The price field must be greater than zero.");
     }
 
     [Fact]
@@ -72,9 +73,9 @@ public class CreateMaterialValidatorTests
     }
 
     [Fact]
-    public void Validate_ZeroPriceAndMinimum_ShouldPass()
+    public void Validate_ZeroStockMinimum_ShouldPass()
     {
-        var result = new CreateMaterialValidator().Validate(new CreateMaterialCommand("PARAFUSO", null, 0m, 0));
+        var result = new CreateMaterialValidator().Validate(new CreateMaterialCommand("PARAFUSO", null, 2.50m, 0));
 
         result.IsValid.ShouldBeTrue();
     }
