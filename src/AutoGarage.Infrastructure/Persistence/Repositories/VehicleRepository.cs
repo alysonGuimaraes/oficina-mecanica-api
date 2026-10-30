@@ -33,6 +33,13 @@ public class VehicleRepository : IVehicleReadOnlyRepository, IVehicleWriteOnlyRe
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Vehicle?> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.Vehicles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+    }
+
     public async Task Add(Vehicle vehicle, CancellationToken cancellationToken)
     {
         await _context.Vehicles.AddAsync(vehicle, cancellationToken);

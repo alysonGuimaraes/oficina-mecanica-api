@@ -37,6 +37,11 @@ public class FakeVehicleRepository : IVehicleReadOnlyRepository, IVehicleWriteOn
         return Task.FromResult(ordered);
     }
 
+    public Task<Vehicle?> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(_vehicles.FirstOrDefault(v => v.Id == id));
+    }
+
     public Task Add(Vehicle vehicle, CancellationToken cancellationToken)
     {
         _vehicles.Add(vehicle);
