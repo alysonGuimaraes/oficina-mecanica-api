@@ -4,6 +4,7 @@ using AutoGarage.Application.UseCases.Materials.GetMaterialById;
 using AutoGarage.Application.UseCases.Materials.ListLowStockMaterials;
 using AutoGarage.Application.UseCases.Materials.ListMaterials;
 using AutoGarage.Application.UseCases.Materials.UpdateMaterial;
+using AutoGarage.Application.UseCases.Materials.StockEntry;
 using AutoGarage.Application.UseCases.Materials.UpdateMaterialStatus;
 using AutoGarage.Communication.Requests.Materials;
 using AutoGarage.Communication.Responses.Materials;
@@ -97,6 +98,21 @@ public class MaterialsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new UpdateMaterialStatusCommand(id, request.Status);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/stock-entry")]
+    [ProducesResponseType(typeof(MaterialResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<MaterialResponse>> StockEntry(
+        [FromRoute] string id,
+        [FromBody] StockEntryRequest request,
+        [FromServices] IStockEntryUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new StockEntryCommand(id, request.Quantity);
 
         var result = await useCase.Handle(command, cancellationToken);
 
