@@ -30,6 +30,9 @@ Dinheiro, quando existir, deve usar `numeric(10,2)` no schema e `decimal` no có
 | `EntityStatus` | `INACTIVE` = 0, `ACTIVE` = 1 | `int` |
 | `EmployeeRole` | `MECHANIC` = 1, `ATTENDANT` = 2 | `int` |
 | `DocumentType` | `CPF` = 1, `CNPJ` = 2 | `int` |
+| `PlateType` | `OLD` = 1, `MERCOSUL` = 2 | `int` |
+| `VehicleType` | `CAR` = 1, `MOTORCYCLE` = 2, `PICKUP` = 3, `MINIBUS` = 4, `VAN` = 5, `OTHER` = 6 | `int` |
+| `TransactionType` | `IN` = 1, `OUT` = 2 | `int` |
 
 Na API, enums trafegam como texto (`ACTIVE`, `MECHANIC`), por causa de `JsonStringEnumConverter` com `allowIntegerValues: false`. No banco ficam os inteiros acima. Os comentários de coluna nas migrations registram essa correspondência.
 
@@ -116,6 +119,44 @@ Na API, enums trafegam como texto (`ACTIVE`, `MECHANIC`), por causa de `JsonStri
 - `Description` é opcional. A spec cita descrição no `PUT`, mas não no `POST`.
 - `Price` é validado no domínio (maior que zero) e repetido no `CHECK` do schema. Alterar o preço não afeta OS já emitidas: a OS guarda o preço no item, no momento da inclusão. Essa regra pertence à futura tabela de itens da OS.
 
+### materials
+
+| Coluna | Tipo | Nulo | Padrão | Constraint |
+|---|---|---|---|---|
+| `Id` | `uuid` | não | — | Chave primária |
+| `Name` | `varchar(150)` | não | — | Índice único `IX_materials_Name` |
+| `Description` | `varchar(500)` | sim | — | — |
+| `Price` | `numeric(10,2)` | não | — | `CHECK ("Price" >= 0)` |
+| `StockQuantity` | `int` | não | — | `CHECK ("StockQuantity" >= 0)`. Saldo atual |
+| `StockMinimum` | `int` | não | — | `CHECK ("StockMinimum" >= 0)` |
+| `Status` | `int` | não | `1` (ACTIVE) | Valores de `EntityStatus` |
+| `CreatedAt` | `timestamptz` | não | — | — |
+| `UpdatedAt` | `timestamptz` | sim | — | — |
+
+**Leitura do modelo:**
+- Material nunca é removido fisicamente. Inativar é mudar `Status` para `INACTIVE`.
+- `Name` é gravado em maiúsculas, com espaços nas pontas e repetidos reduzidos a um só. A unicidade é o índice único sobre o valor já normalizado, então não diferencia caixa.
+- `Price`, `StockQuantity` e `StockMinimum` não podem ser negativos, como exige a spec no `PUT`.
+- `StockQuantity` é o saldo atual. Ele é alterado somente pelas movimentações (`stock-entry` e `stock-out`), e cada movimentação grava o novo saldo em `material_transactions.BalanceAfter`, na mesma transação do banco. O `PUT` do material não altera `StockQuantity`.
+- Saída que deixaria o saldo negativo é rejeitada com `409` (código `insufficient-stock`), e nenhuma transação é gravada.
+- Material está em estoque crítico quando `StockQuantity` é menor que `StockMinimum`.
+
+### material_transactions
+
+| Coluna | Tipo | Nulo | Padrão | Constraint |
+|---|---|---|---|---|
+| `Id` | `uuid` | não | — | Chave primária |
+| `MaterialId` | `uuid` | não | — | FK para `materials(Id)`, `ON DELETE NO ACTION`, índice `IX_material_transactions_MaterialId` |
+| `Type` | `int` | não | — | Valores de `TransactionType` |
+| `Quantity` | `int` | não | — | `CHECK ("Quantity" > 0)` |
+| `BalanceAfter` | `int` | não | — | `CHECK ("BalanceAfter" >= 0)`. Saldo do material logo após a movimentação |
+| `CreatedAt` | `timestamptz` | não | — | — |
+
+**Leitura do modelo:**
+- A transação é um registro imutável: nunca é alterada nem removida. Por isso a tabela não tem `Status` nem `UpdatedAt`.
+- A entrada de estoque grava uma transação `IN` sem vínculo com OS. A coluna `ServiceOrderId` entra junto com a tabela de OS, quando o vínculo passar a existir.
+- Duas movimentações simultâneas no mesmo material não têm proteção explícita contra saldo incorreto (ver pendências).
+
 ## Pendências
 
 | Tema | Situação |
@@ -124,3 +165,4 @@ Na API, enums trafegam como texto (`ACTIVE`, `MECHANIC`), por causa de `JsonStri
 | Unicidade de `Name` | A spec não exige, e o schema não tem índice. Decidir se o nome deve ser único. |
 | Índice único de e-mail sem diferenciar caixa | Hoje o índice é sensível à caixa. Um índice sobre `lower("Email")` fecharia a brecha da corrida, mas exige nova migration. |
 | Demais entidades (materiais, ordens) | Ainda não existem no schema. Serão documentadas quando as migrations forem criadas. |
+| Concorrência no saldo de material | Sem token de concorrência, por decisão. Duas movimentações simultâneas no mesmo material podem gravar saldo incorreto. Revisar antes de liberar a baixa de estoque por OS. |
