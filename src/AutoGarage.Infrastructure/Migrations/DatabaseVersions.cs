@@ -7,4 +7,5 @@ public abstract class DatabaseVersions
     public const int TABLE_VEHICLE = 3;
     public const int TABLE_SERVICE = 4;
     public const int TABLE_MATERIAL = 5;
+    public const int TABLE_MATERIAL_TRANSACTION = 6;
 }

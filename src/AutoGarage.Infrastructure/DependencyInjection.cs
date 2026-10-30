@@ -79,6 +79,7 @@ public static class DependencyInjection
 
         services.AddScoped<IMaterialWriteOnlyRepository, MaterialRepository>();
         services.AddScoped<IMaterialReadOnlyRepository, MaterialRepository>();
+        services.AddScoped<IMaterialTransactionWriteOnlyRepository, MaterialTransactionRepository>();
     }
 
     private static void AddFluentMigrator_Postgres(IServiceCollection services, IConfiguration configuration)
