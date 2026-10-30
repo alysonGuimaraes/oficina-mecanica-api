@@ -27,4 +27,20 @@ public class FakeMaterialTransactionRepository : IMaterialTransactionWriteOnlyRe
 
         return Task.FromResult(ordered);
     }
+
+    public Task<IReadOnlyList<MaterialTransaction>> GetAll(TransactionType? type, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<MaterialTransaction> ordered = _transactions
+            .Where(t => type is null || t.Type == type)
+            .OrderBy(t => t.CreatedAt)
+            .ThenBy(t => t.Id)
+            .ToList();
+
+        return Task.FromResult(ordered);
+    }
+
+    public Task<MaterialTransaction?> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(_transactions.FirstOrDefault(t => t.Id == id));
+    }
 }

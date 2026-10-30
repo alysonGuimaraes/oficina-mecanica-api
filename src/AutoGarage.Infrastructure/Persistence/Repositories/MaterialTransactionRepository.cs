@@ -28,4 +28,21 @@ public class MaterialTransactionRepository : IMaterialTransactionWriteOnlyReposi
             .ThenBy(t => t.Id)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<MaterialTransaction>> GetAll(TransactionType? type, CancellationToken cancellationToken)
+    {
+        return await _context.MaterialTransactions
+            .AsNoTracking()
+            .Where(t => type == null || t.Type == type)
+            .OrderBy(t => t.CreatedAt)
+            .ThenBy(t => t.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<MaterialTransaction?> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.MaterialTransactions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+    }
 }
