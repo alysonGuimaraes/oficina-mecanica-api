@@ -30,8 +30,6 @@ Dinheiro, quando existir, deve usar `numeric(10,2)` no schema e `decimal` no có
 | `EntityStatus` | `INACTIVE` = 0, `ACTIVE` = 1 | `int` |
 | `EmployeeRole` | `MECHANIC` = 1, `ATTENDANT` = 2 | `int` |
 | `DocumentType` | `CPF` = 1, `CNPJ` = 2 | `int` |
-| `PlateType` | `OLD` = 1, `MERCOSUL` = 2 | `int` |
-| `VehicleType` | `CAR` = 1, `MOTORCYCLE` = 2, `PICKUP` = 3, `MINIBUS` = 4, `VAN` = 5, `OTHER` = 6 | `int` |
 
 Na API, enums trafegam como texto (`ACTIVE`, `MECHANIC`), por causa de `JsonStringEnumConverter` com `allowIntegerValues: false`. No banco ficam os inteiros acima. Os comentários de coluna nas migrations registram essa correspondência.
 
@@ -79,8 +77,6 @@ Na API, enums trafegam como texto (`ACTIVE`, `MECHANIC`), por causa de `JsonStri
 
 ### vehicles
 
-Tabela ainda não criada por migration. A estrutura abaixo é o desenho aprovado e vira fonte de verdade quando a `Version` correspondente existir.
-
 | Coluna | Tipo | Nulo | Padrão | Constraint |
 |---|---|---|---|---|
 | `Id` | `uuid` | não | — | Chave primária |
@@ -102,6 +98,24 @@ Tabela ainda não criada por migration. A estrutura abaixo é o desenho aprovado
 - `VehicleType` classifica o veículo e é obrigatório. Ele é informado no cadastro e não é alterado depois, nem pelo `PUT` nem pela troca de dono.
 - `CustomerId` é o dono atual. A troca de dono altera só essa coluna. As ordens de serviço guardam o cliente da abertura, então o histórico de donos fica nelas, e não aqui.
 
+### services
+
+| Coluna | Tipo | Nulo | Padrão | Constraint |
+|---|---|---|---|---|
+| `Id` | `uuid` | não | — | Chave primária |
+| `Name` | `varchar(150)` | não | — | Índice único `IX_services_Name` |
+| `Description` | `varchar(500)` | sim | — | — |
+| `Price` | `numeric(10,2)` | não | — | `CHECK ("Price" > 0)` |
+| `Status` | `int` | não | `1` (ACTIVE) | Valores de `EntityStatus` |
+| `CreatedAt` | `timestamptz` | não | — | — |
+| `UpdatedAt` | `timestamptz` | sim | — | — |
+
+**Leitura do modelo:**
+- Serviço nunca é removido fisicamente. Inativar é mudar `Status` para `INACTIVE`.
+- `Name` é gravado em maiúsculas, com espaços nas pontas e repetidos reduzidos a um só. A unicidade é o índice único sobre o valor já normalizado, então não diferencia caixa.
+- `Description` é opcional. A spec cita descrição no `PUT`, mas não no `POST`.
+- `Price` é validado no domínio (maior que zero) e repetido no `CHECK` do schema. Alterar o preço não afeta OS já emitidas: a OS guarda o preço no item, no momento da inclusão. Essa regra pertence à futura tabela de itens da OS.
+
 ## Pendências
 
 | Tema | Situação |
@@ -109,4 +123,4 @@ Tabela ainda não criada por migration. A estrutura abaixo é o desenho aprovado
 | Algoritmo do hash de senha | SHA-512 com chave fixa. A spec pede bcrypt. Trocar exige recriar os hashes existentes. |
 | Unicidade de `Name` | A spec não exige, e o schema não tem índice. Decidir se o nome deve ser único. |
 | Índice único de e-mail sem diferenciar caixa | Hoje o índice é sensível à caixa. Um índice sobre `lower("Email")` fecharia a brecha da corrida, mas exige nova migration. |
-| Demais entidades (materiais, serviços, ordens) | Ainda não existem no schema. Serão documentadas quando as migrations forem criadas. |
+| Demais entidades (materiais, ordens) | Ainda não existem no schema. Serão documentadas quando as migrations forem criadas. |
