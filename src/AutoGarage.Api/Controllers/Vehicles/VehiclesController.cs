@@ -2,6 +2,7 @@ using AutoGarage.Application.Commands.Vehicles;
 using AutoGarage.Application.UseCases.Vehicles.CreateVehicle;
 using AutoGarage.Application.UseCases.Vehicles.GetVehicleById;
 using AutoGarage.Application.UseCases.Vehicles.ListVehicles;
+using AutoGarage.Application.UseCases.Vehicles.TransferVehicleOwner;
 using AutoGarage.Application.UseCases.Vehicles.UpdateVehicle;
 using AutoGarage.Communication.Requests.Vehicles;
 using AutoGarage.Communication.Responses.Vehicles;
@@ -60,6 +61,21 @@ public class VehiclesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new UpdateVehicleCommand(id, request.Brand, request.Model, request.Plate, request.Year);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPatch("{id}/owner")]
+    [ProducesResponseType(typeof(VehicleResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<VehicleResponse>> TransferOwner(
+        [FromRoute] string id,
+        [FromBody] TransferVehicleOwnerRequest request,
+        [FromServices] ITransferVehicleOwnerUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new TransferVehicleOwnerCommand(id, request.NewOwnerDocument);
 
         var result = await useCase.Handle(command, cancellationToken);
 
