@@ -1,5 +1,6 @@
 using AutoGarage.Domain.Entities;
 using AutoGarage.Domain.Repositories.Services;
+using AutoGarage.Domain.Shared;
 
 namespace AutoGarage.CommonTestUtilities.Repositories.Services;
 
@@ -23,6 +24,17 @@ public class FakeServiceRepository : IServiceReadOnlyRepository, IServiceWriteOn
         var exists = _services.Any(s => s.Name == name);
 
         return Task.FromResult(exists);
+    }
+
+    public Task<IReadOnlyList<Service>> GetByStatus(EntityStatus status, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Service> ordered = _services
+            .Where(s => s.Status == status)
+            .OrderBy(s => s.CreatedAt)
+            .ThenBy(s => s.Id)
+            .ToList();
+
+        return Task.FromResult(ordered);
     }
 
     public Task Add(Service service, CancellationToken cancellationToken)
