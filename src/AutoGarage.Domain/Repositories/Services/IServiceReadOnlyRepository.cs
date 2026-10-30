@@ -7,6 +7,8 @@ public interface IServiceReadOnlyRepository
 {
     Task<bool> ExistsByName(string name, CancellationToken cancellationToken);
 
+    Task<bool> ExistsByNameExcludingId(string name, Guid id, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<Service>> GetByStatus(EntityStatus status, CancellationToken cancellationToken);
 
     Task<Service?> GetById(Guid id, CancellationToken cancellationToken);

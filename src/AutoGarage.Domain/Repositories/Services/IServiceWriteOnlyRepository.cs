@@ -5,4 +5,6 @@ namespace AutoGarage.Domain.Repositories.Services;
 public interface IServiceWriteOnlyRepository
 {
     Task Add(Service service, CancellationToken cancellationToken);
+
+    Task Update(Service service, CancellationToken cancellationToken);
 }

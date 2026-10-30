@@ -26,6 +26,13 @@ public class FakeServiceRepository : IServiceReadOnlyRepository, IServiceWriteOn
         return Task.FromResult(exists);
     }
 
+    public Task<bool> ExistsByNameExcludingId(string name, Guid id, CancellationToken cancellationToken)
+    {
+        var exists = _services.Any(s => s.Id != id && s.Name == name);
+
+        return Task.FromResult(exists);
+    }
+
     public Task<IReadOnlyList<Service>> GetByStatus(EntityStatus status, CancellationToken cancellationToken)
     {
         IReadOnlyList<Service> ordered = _services
@@ -46,6 +53,11 @@ public class FakeServiceRepository : IServiceReadOnlyRepository, IServiceWriteOn
     {
         _services.Add(service);
 
+        return Task.CompletedTask;
+    }
+
+    public Task Update(Service service, CancellationToken cancellationToken)
+    {
         return Task.CompletedTask;
     }
 }
