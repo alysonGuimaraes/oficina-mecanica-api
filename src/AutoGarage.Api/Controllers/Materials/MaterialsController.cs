@@ -1,5 +1,6 @@
 using AutoGarage.Application.Commands.Materials;
 using AutoGarage.Application.UseCases.Materials.CreateMaterial;
+using AutoGarage.Application.UseCases.Materials.GetMaterialById;
 using AutoGarage.Application.UseCases.Materials.ListMaterials;
 using AutoGarage.Communication.Requests.Materials;
 using AutoGarage.Communication.Responses.Materials;
@@ -41,6 +42,18 @@ public class MaterialsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await useCase.Handle(status, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(MaterialResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<MaterialResponse>> GetById(
+        [FromRoute] string id,
+        [FromServices] IGetMaterialByIdUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(id, cancellationToken);
 
         return Ok(result);
     }
