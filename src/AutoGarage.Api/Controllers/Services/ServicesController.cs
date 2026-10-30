@@ -1,5 +1,6 @@
 using AutoGarage.Application.Commands.Services;
 using AutoGarage.Application.UseCases.Services.CreateService;
+using AutoGarage.Application.UseCases.Services.ListServices;
 using AutoGarage.Communication.Requests.Services;
 using AutoGarage.Communication.Responses.Services;
 using MapsterMapper;
@@ -30,5 +31,17 @@ public class ServicesController : ControllerBase
         var result = await useCase.Handle(command, cancellationToken);
 
         return Created(string.Empty, result);
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<ServiceResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<ServiceResponse>>> List(
+        [FromQuery] string? status,
+        [FromServices] IListServicesUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(status, cancellationToken);
+
+        return Ok(result);
     }
 }
