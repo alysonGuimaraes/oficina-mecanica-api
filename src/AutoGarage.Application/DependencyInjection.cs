@@ -31,6 +31,7 @@ using AutoGarage.Application.UseCases.Materials.UpdateMaterial;
 using AutoGarage.Application.UseCases.Materials.UpdateMaterialStatus;
 using AutoGarage.Application.UseCases.Materials.StockEntry;
 using AutoGarage.Application.UseCases.Materials.StockOut;
+using AutoGarage.Application.UseCases.Materials.ListMaterialTransactions;
 using Mapster;
 using MapsterMapper;
 using Microsoft.Extensions.Configuration;
@@ -88,6 +89,7 @@ public static class DependencyInjection
         services.AddScoped<IUpdateMaterialStatusUseCase, UpdateMaterialStatusUseCase>();
         services.AddScoped<IStockEntryUseCase, StockEntryUseCase>();
         services.AddScoped<IStockOutUseCase, StockOutUseCase>();
+        services.AddScoped<IListMaterialTransactionsUseCase, ListMaterialTransactionsUseCase>();
     }
 
     private static void AddPasswordEncripter(IServiceCollection services, IConfiguration configuration)
