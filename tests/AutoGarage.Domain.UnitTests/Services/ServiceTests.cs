@@ -81,4 +81,40 @@ public class ServiceTests
 
         Should.Throw<ServiceAlreadyInactiveException>(() => service.Deactivate());
     }
+
+    [Fact]
+    public void UpdateProfile_ValidValues_ShouldChangeNameDescriptionPriceAndSetUpdatedAt()
+    {
+        var service = Service.Create("ALINHAMENTO", null, 80m);
+
+        service.UpdateProfile("TROCA DE ÓLEO", "Com filtro", 150.50m);
+
+        service.Name.ShouldBe("TROCA DE ÓLEO");
+        service.Description.ShouldBe("Com filtro");
+        service.Price.ShouldBe(150.50m);
+        service.UpdatedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void UpdateProfile_NullDescription_ShouldClearDescription()
+    {
+        var service = Service.Create("ALINHAMENTO", "Antiga", 80m);
+
+        service.UpdateProfile("ALINHAMENTO", null, 80m);
+
+        service.Description.ShouldBeNull();
+    }
+
+    [Fact]
+    public void UpdateProfile_InactiveService_ShouldKeepInactiveStatus()
+    {
+        var service = Service.Create("ALINHAMENTO", null, 80m);
+        service.Deactivate();
+
+        service.UpdateProfile("ALINHAMENTO", null, 90m);
+
+        service.Status.ShouldBe(EntityStatus.INACTIVE);
+        service.Price.ShouldBe(90m);
+        service.UpdatedAt.ShouldNotBeNull();
+    }
 }

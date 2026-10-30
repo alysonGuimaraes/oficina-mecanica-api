@@ -51,4 +51,12 @@ public class Service
         Status = EntityStatus.INACTIVE;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void UpdateProfile(string name, string? description, decimal price)
+    {
+        Name = name;
+        Description = description;
+        Price = price;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
