@@ -1,5 +1,6 @@
 using AutoGarage.Domain.Entities;
 using AutoGarage.Domain.Repositories.Vehicles;
+using AutoGarage.Domain.Shared;
 using AutoGarage.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,16 @@ public class VehicleRepository : IVehicleReadOnlyRepository, IVehicleWriteOnlyRe
 
         return await _context.Vehicles
             .AnyAsync(v => v.Plate == plateValue, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Vehicle>> GetByStatus(EntityStatus status, CancellationToken cancellationToken)
+    {
+        return await _context.Vehicles
+            .AsNoTracking()
+            .Where(v => v.Status == status)
+            .OrderBy(v => v.CreatedAt)
+            .ThenBy(v => v.Id)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task Add(Vehicle vehicle, CancellationToken cancellationToken)

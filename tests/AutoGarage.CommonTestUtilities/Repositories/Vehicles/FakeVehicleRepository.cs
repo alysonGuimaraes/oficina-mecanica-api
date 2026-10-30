@@ -1,5 +1,6 @@
 using AutoGarage.Domain.Entities;
 using AutoGarage.Domain.Repositories.Vehicles;
+using AutoGarage.Domain.Shared;
 
 namespace AutoGarage.CommonTestUtilities.Repositories.Vehicles;
 
@@ -23,6 +24,17 @@ public class FakeVehicleRepository : IVehicleReadOnlyRepository, IVehicleWriteOn
         var exists = _vehicles.Any(v => v.Plate.Value == plate);
 
         return Task.FromResult(exists);
+    }
+
+    public Task<IReadOnlyList<Vehicle>> GetByStatus(EntityStatus status, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Vehicle> ordered = _vehicles
+            .Where(v => v.Status == status)
+            .OrderBy(v => v.CreatedAt)
+            .ThenBy(v => v.Id)
+            .ToList();
+
+        return Task.FromResult(ordered);
     }
 
     public Task Add(Vehicle vehicle, CancellationToken cancellationToken)
