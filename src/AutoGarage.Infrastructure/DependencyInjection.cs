@@ -6,6 +6,10 @@ using AutoGarage.Domain.Repositories.Employees;
 using AutoGarage.Domain.Repositories.Services;
 using AutoGarage.Domain.Repositories.Materials;
 using AutoGarage.Domain.Repositories.MaterialTransactions;
+using AutoGarage.Domain.Repositories.ServiceOrders.ServiceOrders;
+using AutoGarage.Domain.Repositories.ServiceOrders.ServiceOrderServices;
+using AutoGarage.Domain.Repositories.ServiceOrders.ServiceOrderMaterials;
+using AutoGarage.Domain.Repositories.ServiceOrders.ServiceOrderStatusHistories;
 using AutoGarage.Infrastructure.Authentication;
 using AutoGarage.Infrastructure.Persistence;
 using AutoGarage.Infrastructure.Persistence.Repositories;
@@ -82,6 +86,15 @@ public static class DependencyInjection
         services.AddScoped<IMaterialReadOnlyRepository, MaterialRepository>();
         services.AddScoped<IMaterialTransactionWriteOnlyRepository, MaterialTransactionRepository>();
         services.AddScoped<IMaterialTransactionReadOnlyRepository, MaterialTransactionRepository>();
+
+        services.AddScoped<IServiceOrderReadOnlyRepository, ServiceOrderRepository>();
+        services.AddScoped<IServiceOrderWriteOnlyRepository, ServiceOrderRepository>();
+        services.AddScoped<IServiceOrderServiceReadOnlyRepository, ServiceOrderServiceRepository>();
+        services.AddScoped<IServiceOrderServiceWriteOnlyRepository, ServiceOrderServiceRepository>();
+        services.AddScoped<IServiceOrderMaterialReadOnlyRepository, ServiceOrderMaterialRepository>();
+        services.AddScoped<IServiceOrderMaterialWriteOnlyRepository, ServiceOrderMaterialRepository>();
+        services.AddScoped<IServiceOrderStatusHistoryReadOnlyRepository, ServiceOrderStatusHistoryRepository>();
+        services.AddScoped<IServiceOrderStatusHistoryWriteOnlyRepository, ServiceOrderStatusHistoryRepository>();
     }
 
     private static void AddFluentMigrator_Postgres(IServiceCollection services, IConfiguration configuration)
