@@ -2,6 +2,7 @@ using AutoGarage.Application.Commands.Auth;
 using AutoGarage.Application.Commands.Customers;
 using AutoGarage.Application.Commands.Employees;
 using AutoGarage.Application.Commands.Materials;
+using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.Commands.Services;
 using AutoGarage.Application.Commands.Vehicles;
 using AutoGarage.CommonTestUtilities.Mapper;
@@ -9,6 +10,7 @@ using AutoGarage.Communication.Requests.Auth;
 using AutoGarage.Communication.Requests.Customers;
 using AutoGarage.Communication.Requests.Employees;
 using AutoGarage.Communication.Requests.Materials;
+using AutoGarage.Communication.Requests.ServiceOrders;
 using AutoGarage.Communication.Requests.Services;
 using AutoGarage.Communication.Requests.Vehicles;
 using AutoGarage.Domain.Enums.Employees;
@@ -45,6 +47,18 @@ public class RequestToCommandMappingTests
         command.Email.ShouldBe("John@Autogarage.com");
         command.Ddd.ShouldBe("41");
         command.Phone.ShouldBe("999999999");
+    }
+
+    [Fact]
+    public void Map_CreateServiceOrderRequest_ShouldKeepValuesUnchanged()
+    {
+        var request = new CreateServiceOrderRequest("7d7b1d1e-2b1a-4a7e-9a55-0c6a5b1d2e11", "8e8c2e2f-3c2b-4b8f-8b66-1d7b6c2e3f22", "9f9d3f3a-4d3c-4c9a-9c77-2e8c7d3f4a33");
+
+        var command = _mapper.Map<CreateServiceOrderCommand>(request);
+
+        command.CustomerId.ShouldBe("7d7b1d1e-2b1a-4a7e-9a55-0c6a5b1d2e11");
+        command.VehicleId.ShouldBe("8e8c2e2f-3c2b-4b8f-8b66-1d7b6c2e3f22");
+        command.EmployeeId.ShouldBe("9f9d3f3a-4d3c-4c9a-9c77-2e8c7d3f4a33");
     }
 
     [Fact]
