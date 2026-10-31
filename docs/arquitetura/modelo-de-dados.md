@@ -33,11 +33,9 @@ Dinheiro, quando existir, deve usar `numeric(10,2)` no schema e `decimal` no có
 | `PlateType` | `OLD` = 1, `MERCOSUL` = 2 | `int` |
 | `VehicleType` | `CAR` = 1, `MOTORCYCLE` = 2, `PICKUP` = 3, `MINIBUS` = 4, `VAN` = 5, `OTHER` = 6 | `int` |
 | `TransactionType` | `IN` = 1, `OUT` = 2 | `int` |
-| `ServiceOrderStatus` (planejado) | `RECEIVED` = 1, `IN_DIAGNOSIS` = 2, `AWAITING_APPROVAL` = 3, `AWAITING_MATERIALS` = 4, `IN_EXECUTION` = 5, `FINISHED` = 6, `CANCELLED` = 7, `DELIVERED` = 8 | `int` |
-| `ServiceOrderEventType` (planejado) | `STATUS_CHANGE` = 1, `ITEM_SERVICE` = 2, `ITEM_MATERIAL` = 3 | `int` |
-| `ServiceOrderItemDirection` (planejado) | `IN` = 1 (incluído na OS), `OUT` = 2 (removido da OS) | `int` |
-
-A numeração dos dois enums planejados é uma proposta, e vale só depois que a migration de OS for criada.
+| `ServiceOrderStatus` | `RECEIVED` = 1, `IN_DIAGNOSIS` = 2, `AWAITING_APPROVAL` = 3, `AWAITING_MATERIALS` = 4, `IN_EXECUTION` = 5, `FINISHED` = 6, `CANCELLED` = 7, `DELIVERED` = 8 | `int` |
+| `ServiceOrderEventType` | `STATUS_CHANGE` = 1, `ITEM_SERVICE` = 2, `ITEM_MATERIAL` = 3 | `int` |
+| `ServiceOrderItemDirection` | `IN` = 1 (incluído na OS), `OUT` = 2 (removido da OS) | `int` |
 
 Na API, enums trafegam como texto (`ACTIVE`, `MECHANIC`), por causa de `JsonStringEnumConverter` com `allowIntegerValues: false`. No banco ficam os inteiros acima. Os comentários de coluna nas migrations registram essa correspondência.
 
@@ -163,10 +161,6 @@ Na API, enums trafegam como texto (`ACTIVE`, `MECHANIC`), por causa de `JsonStri
 - Duas movimentações simultâneas no mesmo material não têm proteção explícita contra saldo incorreto (ver pendências).
 
 ## Ordens de serviço (planejado, sem migration)
-
-Estas tabelas **ainda não existem no schema**. Os nomes seguem a spec (`S-08` da análise de OS, em snake_case). Quando a migration for criada, este texto vira a documentação do schema e passa a valer como fonte de verdade.
-
-Decisões de origem: `IAdocs/ServiceOrders/ANALISE-ordens-de-servico.md`.
 
 ### service_orders
 
