@@ -19,6 +19,14 @@ public class AppDbContext : DbContext
 
     public DbSet<MaterialTransaction> MaterialTransactions { get; set; }
 
+    public DbSet<ServiceOrder> ServiceOrders { get; set; }
+
+    public DbSet<ServiceOrderService> ServiceOrderServices { get; set; }
+
+    public DbSet<ServiceOrderMaterial> ServiceOrderMaterials { get; set; }
+
+    public DbSet<ServiceOrderStatusHistory> ServiceOrderStatusHistories { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
