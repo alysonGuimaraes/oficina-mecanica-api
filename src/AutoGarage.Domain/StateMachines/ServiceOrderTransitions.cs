@@ -1,6 +1,6 @@
 using AutoGarage.Domain.Enums.ServiceOrders;
 
-namespace AutoGarage.Domain.Entities;
+namespace AutoGarage.Domain.StateMachines;
 
 public static class ServiceOrderTransitions
 {

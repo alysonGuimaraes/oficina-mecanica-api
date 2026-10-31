@@ -1,6 +1,6 @@
-using AutoGarage.Domain.Entities;
 using AutoGarage.Domain.Enums.ServiceOrders;
 using AutoGarage.Domain.Exceptions.ServiceOrders.Exceptions;
+using AutoGarage.Domain.StateMachines;
 using Shouldly;
 
 namespace AutoGarage.Domain.UnitTests.ServiceOrders;

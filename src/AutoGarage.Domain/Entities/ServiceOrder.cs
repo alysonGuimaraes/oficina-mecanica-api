@@ -1,5 +1,6 @@
 using AutoGarage.Domain.Enums.ServiceOrders;
 using AutoGarage.Domain.Exceptions.ServiceOrders.Exceptions;
+using AutoGarage.Domain.StateMachines;
 
 namespace AutoGarage.Domain.Entities;
 
