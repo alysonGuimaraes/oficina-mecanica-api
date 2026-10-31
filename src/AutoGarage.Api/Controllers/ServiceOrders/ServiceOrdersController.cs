@@ -1,5 +1,7 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.CreateServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.GetServiceOrderById;
+using AutoGarage.Application.UseCases.ServiceOrders.ListServiceOrders;
 using AutoGarage.Communication.Requests.ServiceOrders;
 using AutoGarage.Communication.Responses.ServiceOrders;
 using MapsterMapper;
@@ -30,5 +32,29 @@ public class ServiceOrdersController : ControllerBase
         var result = await useCase.Handle(command, cancellationToken);
 
         return Created(string.Empty, result);
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<ServiceOrderResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<ServiceOrderResponse>>> List(
+        [FromQuery] string? status,
+        [FromServices] IListServiceOrdersUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(status, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(ServiceOrderDetailResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ServiceOrderDetailResponse>> GetById(
+        [FromRoute] string id,
+        [FromServices] IGetServiceOrderByIdUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.Handle(id, cancellationToken);
+
+        return Ok(result);
     }
 }
