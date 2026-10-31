@@ -1,4 +1,5 @@
 using AutoGarage.Domain.Entities;
+using AutoGarage.Domain.Enums.ServiceOrders;
 using AutoGarage.Domain.Repositories.ServiceOrders.ServiceOrders;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,16 @@ public class ServiceOrderRepository : IServiceOrderReadOnlyRepository, IServiceO
         return await _context.ServiceOrders
             .AsNoTracking()
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ServiceOrder>> GetAll(ServiceOrderStatus? status, CancellationToken cancellationToken)
+    {
+        return await _context.ServiceOrders
+            .AsNoTracking()
+            .Where(o => status == null || o.Status == status)
+            .OrderBy(o => o.CreatedAt)
+            .ThenBy(o => o.Id)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task Add(ServiceOrder serviceOrder, CancellationToken cancellationToken)
