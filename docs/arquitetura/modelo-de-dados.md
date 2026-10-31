@@ -37,7 +37,7 @@ Dinheiro, quando existir, deve usar `numeric(10,2)` no schema e `decimal` no có
 | `ServiceOrderEventType` (planejado) | `STATUS_CHANGE` = 1, `ITEM_SERVICE` = 2, `ITEM_MATERIAL` = 3 | `int` |
 | `ServiceOrderItemDirection` (planejado) | `IN` = 1 (incluído na OS), `OUT` = 2 (removido da OS) | `int` |
 
-A numeração dos dois enums planejados é uma proposta, e vale só depois que a migration de OS for criada.
+A numeração dos dois enums planejados está confirmada e vale como definição para a migration de OS.
 
 Na API, enums trafegam como texto (`ACTIVE`, `MECHANIC`), por causa de `JsonStringEnumConverter` com `allowIntegerValues: false`. No banco ficam os inteiros acima. Os comentários de coluna nas migrations registram essa correspondência.
 
@@ -163,10 +163,6 @@ Na API, enums trafegam como texto (`ACTIVE`, `MECHANIC`), por causa de `JsonStri
 - Duas movimentações simultâneas no mesmo material não têm proteção explícita contra saldo incorreto (ver pendências).
 
 ## Ordens de serviço (planejado, sem migration)
-
-Estas tabelas **ainda não existem no schema**. Os nomes seguem a spec (`S-08` da análise de OS, em snake_case). Quando a migration for criada, este texto vira a documentação do schema e passa a valer como fonte de verdade.
-
-Decisões de origem: `IAdocs/ServiceOrders/ANALISE-ordens-de-servico.md`.
 
 ### service_orders
 
