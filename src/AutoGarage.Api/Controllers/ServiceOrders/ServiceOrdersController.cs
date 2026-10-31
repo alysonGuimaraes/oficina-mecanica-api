@@ -1,10 +1,12 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.AddServiceToServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.AddMaterialToServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.CreateServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.DeliverServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.DiagnoseServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.GetServiceOrderById;
 using AutoGarage.Application.UseCases.ServiceOrders.ListServiceOrders;
+using AutoGarage.Application.UseCases.ServiceOrders.RemoveMaterialFromServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.RemoveServiceFromServiceOrder;
 using AutoGarage.Communication.Requests.ServiceOrders;
 using AutoGarage.Communication.Responses.ServiceOrders;
@@ -116,6 +118,36 @@ public class ServiceOrdersController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new RemoveServiceFromServiceOrderCommand(id, request.ItemId, request.EmployeeId);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/materials")]
+    [ProducesResponseType(typeof(ServiceOrderMaterialItemResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ServiceOrderMaterialItemResponse>> AddMaterial(
+        [FromRoute] string id,
+        [FromBody] AddMaterialRequest request,
+        [FromServices] IAddMaterialToServiceOrderUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new AddMaterialToServiceOrderCommand(id, request.MaterialId, request.Quantity, request.EmployeeId);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/remove-material")]
+    [ProducesResponseType(typeof(ServiceOrderMaterialItemResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ServiceOrderMaterialItemResponse>> RemoveMaterial(
+        [FromRoute] string id,
+        [FromBody] RemoveMaterialRequest request,
+        [FromServices] IRemoveMaterialFromServiceOrderUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new RemoveMaterialFromServiceOrderCommand(id, request.ItemId, request.EmployeeId);
 
         var result = await useCase.Handle(command, cancellationToken);
 
