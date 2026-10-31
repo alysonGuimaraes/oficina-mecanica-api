@@ -33,6 +33,11 @@ Dinheiro, quando existir, deve usar `numeric(10,2)` no schema e `decimal` no có
 | `PlateType` | `OLD` = 1, `MERCOSUL` = 2 | `int` |
 | `VehicleType` | `CAR` = 1, `MOTORCYCLE` = 2, `PICKUP` = 3, `MINIBUS` = 4, `VAN` = 5, `OTHER` = 6 | `int` |
 | `TransactionType` | `IN` = 1, `OUT` = 2 | `int` |
+| `ServiceOrderStatus` (planejado) | `RECEIVED` = 1, `IN_DIAGNOSIS` = 2, `AWAITING_APPROVAL` = 3, `AWAITING_MATERIALS` = 4, `IN_EXECUTION` = 5, `FINISHED` = 6, `CANCELLED` = 7, `DELIVERED` = 8 | `int` |
+| `ServiceOrderEventType` (planejado) | `STATUS_CHANGE` = 1, `ITEM_SERVICE` = 2, `ITEM_MATERIAL` = 3 | `int` |
+| `ServiceOrderItemDirection` (planejado) | `IN` = 1 (incluído na OS), `OUT` = 2 (removido da OS) | `int` |
+
+A numeração dos dois enums planejados é uma proposta, e vale só depois que a migration de OS for criada.
 
 Na API, enums trafegam como texto (`ACTIVE`, `MECHANIC`), por causa de `JsonStringEnumConverter` com `allowIntegerValues: false`. No banco ficam os inteiros acima. Os comentários de coluna nas migrations registram essa correspondência.
 
@@ -154,8 +159,98 @@ Na API, enums trafegam como texto (`ACTIVE`, `MECHANIC`), por causa de `JsonStri
 
 **Leitura do modelo:**
 - A transação é um registro imutável: nunca é alterada nem removida. Por isso a tabela não tem `Status` nem `UpdatedAt`.
-- A entrada de estoque grava uma transação `IN` sem vínculo com OS. A coluna `ServiceOrderId` entra junto com a tabela de OS, quando o vínculo passar a existir.
+- A entrada de estoque grava uma transação `IN` sem vínculo com OS. A coluna `ServiceOrderId` (`uuid`, nulo, FK para `service_orders(Id)`) será adicionada na mesma migration das tabelas de OS, ainda não existe no schema. Ela será preenchida na devolução de estoque por cancelamento, que grava uma transação `IN` vinculada à OS.
 - Duas movimentações simultâneas no mesmo material não têm proteção explícita contra saldo incorreto (ver pendências).
+
+## Ordens de serviço (planejado, sem migration)
+
+Estas tabelas **ainda não existem no schema**. Os nomes seguem a spec (`S-08` da análise de OS, em snake_case). Quando a migration for criada, este texto vira a documentação do schema e passa a valer como fonte de verdade.
+
+Decisões de origem: `IAdocs/ServiceOrders/ANALISE-ordens-de-servico.md`.
+
+### service_orders
+
+| Coluna | Tipo | Nulo | Padrão | Constraint |
+|---|---|---|---|---|
+| `Id` | `uuid` | não | — | Chave primária |
+| `CustomerId` | `uuid` | não | — | FK para `customers(Id)`, `ON DELETE NO ACTION`, índice `IX_service_orders_CustomerId` |
+| `VehicleId` | `uuid` | não | — | FK para `vehicles(Id)`, `ON DELETE NO ACTION`, índice `IX_service_orders_VehicleId` |
+| `Status` | `int` | não | — | Valores de `ServiceOrderStatus`. Índice `IX_service_orders_Status` |
+| `BudgetTotal` | `numeric(10,2)` | sim | — | `CHECK ("BudgetTotal" >= 0)`. Preenchido na transição para `AWAITING_APPROVAL` |
+| `BudgetSentAt` | `timestamptz` | sim | — | Momento da entrada em `AWAITING_APPROVAL`. Início do prazo de 10 dias |
+| `Observation` | `varchar(500)` | sim | — | Motivo de finalização (`completion`) |
+| `CancellationReason` | `varchar(500)` | sim | — | Motivo de cancelamento, inclusive o de aprovação fora do prazo |
+| `CreatedAt` | `timestamptz` | não | — | — |
+| `UpdatedAt` | `timestamptz` | sim | — | — |
+
+**Leitura do modelo:**
+- A OS guarda o cliente da abertura (`CustomerId`), e não o dono atual do veículo.
+- A OS não guarda funcionário. Quem fez a abertura e cada mudança de status, serviço ou material fica em `service_order_status_history.EmployeeId`.
+- `Status` usa `ServiceOrderStatus`, e não `EntityStatus`. Por isso a tabela não usa o helper `VersionBase.CreateTable`, que adiciona `Status` com padrão `1` (ACTIVE).
+- `BudgetTotal` é nulo até a transição para `AWAITING_APPROVAL`, e não muda depois disso.
+- `BudgetSentAt`, `Observation`, `CancellationReason` e os tamanhos de `varchar` são propostas para atender às regras de prazo e de motivos.
+
+### service_order_services
+
+| Coluna | Tipo | Nulo | Padrão | Constraint |
+|---|---|---|---|---|
+| `Id` | `uuid` | não | — | Chave primária |
+| `ServiceOrderId` | `uuid` | não | — | FK para `service_orders(Id)`, `ON DELETE NO ACTION`, índice `IX_service_order_services_ServiceOrderId` |
+| `ServiceId` | `uuid` | não | — | FK para `services(Id)`, `ON DELETE NO ACTION`. Índice único com `ServiceOrderId`: `IX_service_order_services_ServiceOrderId_ServiceId` |
+| `Price` | `numeric(10,2)` | não | — | `CHECK ("Price" > 0)`. Preço no momento da inclusão |
+| `Status` | `int` | não | `1` (ACTIVE) | Valores de `EntityStatus`. `INACTIVE` quando o serviço é removido da OS |
+| `CreatedAt` | `timestamptz` | não | — | — |
+| `UpdatedAt` | `timestamptz` | sim | — | Preenchido quando a linha é reativada |
+
+**Leitura do modelo:**
+- Serviço não tem quantidade. Cada serviço aparece uma vez por OS (a unicidade é o índice composto).
+- Remover um serviço muda `Status` para `INACTIVE`. A linha não é apagada, e a remoção fica registrada em `service_order_status_history`.
+- Incluir de novo um serviço que está inativo na OS reativa a linha existente: `Status` volta para `ACTIVE`, `Price` recebe o preço atual do catálogo e `UpdatedAt` é preenchido. Assim o índice único não precisa ser parcial.
+- Serviço já ativo na OS não pode ser incluído de novo (400).
+- Alterar o preço do catálogo não altera as linhas já gravadas.
+
+### service_order_materials
+
+| Coluna | Tipo | Nulo | Padrão | Constraint |
+|---|---|---|---|---|
+| `Id` | `uuid` | não | — | Chave primária |
+| `ServiceOrderId` | `uuid` | não | — | FK para `service_orders(Id)`, `ON DELETE NO ACTION`, índice `IX_service_order_materials_ServiceOrderId` |
+| `MaterialId` | `uuid` | não | — | FK para `materials(Id)`, `ON DELETE NO ACTION`. Índice único com `ServiceOrderId`: `IX_service_order_materials_ServiceOrderId_MaterialId` |
+| `Quantity` | `int` | não | — | `CHECK ("Quantity" > 0)` |
+| `UnitPrice` | `numeric(10,2)` | não | — | `CHECK ("UnitPrice" >= 0)`. Preço unitário no momento da inclusão |
+| `CreatedAt` | `timestamptz` | não | — | — |
+| `Status` | `int` | não | `1` (ACTIVE) | Valores de `EntityStatus`. `INACTIVE` quando o material é removido da OS |
+| `UpdatedAt` | `timestamptz` | sim | — | Preenchido quando a quantidade é somada ou quando a linha é reativada |
+
+**Leitura do modelo:**
+- Material repetido na mesma OS, com a linha ativa, soma a quantidade na linha existente.
+- Incluir de novo um material cuja linha está inativa reativa a linha: `Status` volta para `ACTIVE`, `Quantity` recebe a quantidade informada (não soma com a anterior), `UnitPrice` recebe o preço atual e `UpdatedAt` é preenchido.
+- Remover um material muda `Status` para `INACTIVE`. A linha não é apagada.
+- A baixa de estoque na aprovação (ou em `in-execution`) usa só as linhas `ACTIVE` desta tabela, em uma única gravação atômica com as transações de saída.
+
+### service_order_status_history
+
+| Coluna | Tipo | Nulo | Padrão | Constraint |
+|---|---|---|---|---|
+| `Id` | `uuid` | não | — | Chave primária |
+| `ServiceOrderId` | `uuid` | não | — | FK para `service_orders(Id)`, `ON DELETE NO ACTION`, índice `IX_service_order_status_history_ServiceOrderId` |
+| `EventType` | `int` | não | — | Valores de `ServiceOrderEventType` |
+| `FromStatus` | `int` | sim | — | Estado anterior, em eventos `STATUS_CHANGE`. Nulo na criação |
+| `ToStatus` | `int` | sim | — | Estado novo, em eventos `STATUS_CHANGE` |
+| `ItemId` | `uuid` | sim | — | Id da linha afetada em eventos de item (`ITEM_SERVICE` ou `ITEM_MATERIAL`). **Sem FK**, porque o item pertence a uma de duas tabelas |
+| `ItemDirection` | `int` | sim | — | Valores de `ServiceOrderItemDirection`. Obrigatório quando `ItemId` está preenchido, e nulo quando não está |
+| `EmployeeId` | `uuid` | não | — | FK para `employees(Id)`, `ON DELETE NO ACTION`. Funcionário que fez a mudança |
+| `CreatedAt` | `timestamptz` | não | — | — |
+
+**Leitura do modelo:**
+- O histórico é imutável: não tem `UpdatedAt`.
+- Registra mudanças de status (`EventType` = `STATUS_CHANGE`, com `FromStatus` e `ToStatus`) e inclusões e remoções de serviços e materiais (`EventType` = `ITEM_SERVICE` ou `ITEM_MATERIAL`, com `ItemId` e `ItemDirection`).
+- `ItemDirection` = `IN` é inclusão na OS, e `OUT` é remoção. Não tem relação com a movimentação de estoque (`material_transactions.Type`), embora use a mesma ideia de entrada e saída.
+- Regra de coerência, no banco ou na aplicação: `ItemId` e `ItemDirection` são nulos juntos. Em eventos `STATUS_CHANGE`, os dois são nulos.
+
+### Alteração em material_transactions (planejada)
+
+- Coluna `ServiceOrderId` (`uuid`, nulo, FK para `service_orders(Id)`, `ON DELETE NO ACTION`) entra na mesma migration. Ver a leitura do modelo de `material_transactions`.
 
 ## Pendências
 
@@ -164,5 +259,5 @@ Na API, enums trafegam como texto (`ACTIVE`, `MECHANIC`), por causa de `JsonStri
 | Algoritmo do hash de senha | SHA-512 com chave fixa. A spec pede bcrypt. Trocar exige recriar os hashes existentes. |
 | Unicidade de `Name` | A spec não exige, e o schema não tem índice. Decidir se o nome deve ser único. |
 | Índice único de e-mail sem diferenciar caixa | Hoje o índice é sensível à caixa. Um índice sobre `lower("Email")` fecharia a brecha da corrida, mas exige nova migration. |
-| Demais entidades (materiais, ordens) | Ainda não existem no schema. Serão documentadas quando as migrations forem criadas. |
-| Concorrência no saldo de material | Sem token de concorrência, por decisão. Duas movimentações simultâneas no mesmo material podem gravar saldo incorreto. Revisar antes de liberar a baixa de estoque por OS. |
+| Ordens de serviço | Tabelas documentadas como planejadas, sem migration. Passam a valer como schema quando a migration for criada. |
+| Concorrência no saldo de material | Sem token de concorrência, por decisão, inclusive para a baixa por OS (aprovação e `in-execution`). Duas movimentações simultâneas no mesmo material podem gravar saldo incorreto. Risco aceito. |
