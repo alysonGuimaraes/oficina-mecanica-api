@@ -40,6 +40,7 @@ using AutoGarage.Application.UseCases.ServiceOrders.AddServiceToServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.DeliverServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.DiagnoseServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.GetServiceOrderById;
+using AutoGarage.Application.UseCases.ServiceOrders.RemoveServiceFromServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.ListServiceOrders;
 using Mapster;
 using MapsterMapper;
@@ -108,6 +109,7 @@ public static class DependencyInjection
         services.AddScoped<IDiagnoseServiceOrderUseCase, DiagnoseServiceOrderUseCase>();
         services.AddScoped<IDeliverServiceOrderUseCase, DeliverServiceOrderUseCase>();
         services.AddScoped<IAddServiceToServiceOrderUseCase, AddServiceToServiceOrderUseCase>();
+        services.AddScoped<IRemoveServiceFromServiceOrderUseCase, RemoveServiceFromServiceOrderUseCase>();
     }
 
     private static void AddPasswordEncripter(IServiceCollection services, IConfiguration configuration)
