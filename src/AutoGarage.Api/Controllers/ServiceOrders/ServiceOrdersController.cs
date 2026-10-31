@@ -1,9 +1,11 @@
 using AutoGarage.Application.Commands.ServiceOrders;
+using AutoGarage.Application.UseCases.ServiceOrders.AddServiceToServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.CreateServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.DeliverServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.DiagnoseServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.GetServiceOrderById;
 using AutoGarage.Application.UseCases.ServiceOrders.ListServiceOrders;
+using AutoGarage.Application.UseCases.ServiceOrders.RemoveServiceFromServiceOrder;
 using AutoGarage.Communication.Requests.ServiceOrders;
 using AutoGarage.Communication.Responses.ServiceOrders;
 using MapsterMapper;
@@ -84,6 +86,36 @@ public class ServiceOrdersController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new ServiceOrderEmployeeCommand(id, request.EmployeeId);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/services")]
+    [ProducesResponseType(typeof(ServiceOrderServiceItemResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ServiceOrderServiceItemResponse>> AddService(
+        [FromRoute] string id,
+        [FromBody] AddServiceRequest request,
+        [FromServices] IAddServiceToServiceOrderUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new AddServiceToServiceOrderCommand(id, request.ServiceId, request.EmployeeId);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/remove-service")]
+    [ProducesResponseType(typeof(ServiceOrderServiceItemResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ServiceOrderServiceItemResponse>> RemoveService(
+        [FromRoute] string id,
+        [FromBody] RemoveServiceRequest request,
+        [FromServices] IRemoveServiceFromServiceOrderUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new RemoveServiceFromServiceOrderCommand(id, request.ItemId, request.EmployeeId);
 
         var result = await useCase.Handle(command, cancellationToken);
 
