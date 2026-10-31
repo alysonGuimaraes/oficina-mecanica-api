@@ -1,5 +1,7 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.CreateServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.DeliverServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.DiagnoseServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.GetServiceOrderById;
 using AutoGarage.Application.UseCases.ServiceOrders.ListServiceOrders;
 using AutoGarage.Communication.Requests.ServiceOrders;
@@ -54,6 +56,36 @@ public class ServiceOrdersController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await useCase.Handle(id, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/diagnosis")]
+    [ProducesResponseType(typeof(ServiceOrderResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ServiceOrderResponse>> Diagnosis(
+        [FromRoute] string id,
+        [FromBody] ServiceOrderEmployeeRequest request,
+        [FromServices] IDiagnoseServiceOrderUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new ServiceOrderEmployeeCommand(id, request.EmployeeId);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/delivery")]
+    [ProducesResponseType(typeof(ServiceOrderResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ServiceOrderResponse>> Delivery(
+        [FromRoute] string id,
+        [FromBody] ServiceOrderEmployeeRequest request,
+        [FromServices] IDeliverServiceOrderUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new ServiceOrderEmployeeCommand(id, request.EmployeeId);
+
+        var result = await useCase.Handle(command, cancellationToken);
 
         return Ok(result);
     }
