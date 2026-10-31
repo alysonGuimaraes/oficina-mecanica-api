@@ -8,6 +8,7 @@ namespace AutoGarage.Domain.UnitTests.ServiceOrders;
 public class ServiceOrderBudgetCalculatorTests
 {
     private static readonly Guid OrderId = Guid.NewGuid();
+    private static readonly HashSet<Guid> NoInactiveCatalogServices = new();
 
     [Fact]
     public void Calculate_ActiveServiceAndMaterials_ShouldSumPriceAndQuantityTimesUnitPrice()
@@ -15,7 +16,7 @@ public class ServiceOrderBudgetCalculatorTests
         var services = new List<ServiceOrderService> { ServiceOrderService.Create(OrderId, Guid.NewGuid(), 80m) };
         var materials = new List<ServiceOrderMaterial> { ServiceOrderMaterial.Create(OrderId, Guid.NewGuid(), 2, 15m) };
 
-        var total = ServiceOrderBudgetCalculator.Calculate(services, materials);
+        var total = ServiceOrderBudgetCalculator.Calculate(services, materials, NoInactiveCatalogServices);
 
         total.ShouldBe(110m);
     }
@@ -26,57 +27,92 @@ public class ServiceOrderBudgetCalculatorTests
         var services = new List<ServiceOrderService> { ServiceOrderService.Create(OrderId, Guid.NewGuid(), 80m) };
         var removed = ServiceOrderMaterial.Create(OrderId, Guid.NewGuid(), 2, 15m);
         removed.Deactivate();
-        var materials = new List<ServiceOrderMaterial> { removed };
 
-        var total = ServiceOrderBudgetCalculator.Calculate(services, materials);
+        var total = ServiceOrderBudgetCalculator.Calculate(services, new List<ServiceOrderMaterial> { removed }, NoInactiveCatalogServices);
 
         total.ShouldBe(80m);
     }
 
     [Fact]
-    public void Calculate_OnlyActiveMaterials_ShouldSumMaterials()
+    public void Calculate_RemovedServiceRowWithAnotherActiveService_ShouldIgnoreTheRemovedRow()
     {
-        var services = new List<ServiceOrderService>();
+        var removed = ServiceOrderService.Create(OrderId, Guid.NewGuid(), 80m);
+        removed.Deactivate();
+        var services = new List<ServiceOrderService> { removed, ServiceOrderService.Create(OrderId, Guid.NewGuid(), 50m) };
+
+        var total = ServiceOrderBudgetCalculator.Calculate(services, new List<ServiceOrderMaterial>(), NoInactiveCatalogServices);
+
+        total.ShouldBe(50m);
+    }
+
+    [Fact]
+    public void Calculate_OnlyActiveMaterialsWithNoService_ShouldThrowWithoutItems()
+    {
         var materials = new List<ServiceOrderMaterial> { ServiceOrderMaterial.Create(OrderId, Guid.NewGuid(), 3, 10m) };
 
-        var total = ServiceOrderBudgetCalculator.Calculate(services, materials);
+        var exception = Should.Throw<ServiceOrderBudgetWithoutItemsException>(
+            () => ServiceOrderBudgetCalculator.Calculate(new List<ServiceOrderService>(), materials, NoInactiveCatalogServices));
 
-        total.ShouldBe(30m);
+        exception.ErrorType.ShouldBe("service-order-budget-without-items");
     }
 
     [Fact]
     public void Calculate_NoActiveItems_ShouldThrowWithoutItems()
     {
         var exception = Should.Throw<ServiceOrderBudgetWithoutItemsException>(
-            () => ServiceOrderBudgetCalculator.Calculate(new List<ServiceOrderService>(), new List<ServiceOrderMaterial>()));
+            () => ServiceOrderBudgetCalculator.Calculate(new List<ServiceOrderService>(), new List<ServiceOrderMaterial>(), NoInactiveCatalogServices));
 
         exception.ErrorType.ShouldBe("service-order-budget-without-items");
     }
 
     [Fact]
-    public void Calculate_OnlyInactiveMaterials_ShouldThrowWithoutItems()
+    public void Calculate_OnlyRemovedServiceRow_ShouldThrowWithoutItems()
     {
-        var removed = ServiceOrderMaterial.Create(OrderId, Guid.NewGuid(), 2, 15m);
+        var removed = ServiceOrderService.Create(OrderId, Guid.NewGuid(), 80m);
         removed.Deactivate();
 
         var exception = Should.Throw<ServiceOrderBudgetWithoutItemsException>(
-            () => ServiceOrderBudgetCalculator.Calculate(new List<ServiceOrderService>(), new List<ServiceOrderMaterial> { removed }));
+            () => ServiceOrderBudgetCalculator.Calculate(new List<ServiceOrderService> { removed }, new List<ServiceOrderMaterial>(), NoInactiveCatalogServices));
 
         exception.ErrorType.ShouldBe("service-order-budget-without-items");
     }
 
     [Fact]
-    public void Calculate_InactiveService_ShouldThrowInactiveServiceEvenWithActiveMaterial()
+    public void Calculate_ActiveServiceInactiveInCatalog_ShouldThrowInactiveServiceWithCatalogId()
     {
         var serviceId = Guid.NewGuid();
-        var service = ServiceOrderService.Create(OrderId, serviceId, 80m);
-        service.Deactivate();
-        var materials = new List<ServiceOrderMaterial> { ServiceOrderMaterial.Create(OrderId, Guid.NewGuid(), 1, 10m) };
+        var services = new List<ServiceOrderService> { ServiceOrderService.Create(OrderId, serviceId, 80m) };
+        var inactiveInCatalog = new HashSet<Guid> { serviceId };
 
         var exception = Should.Throw<ServiceOrderBudgetInactiveServiceException>(
-            () => ServiceOrderBudgetCalculator.Calculate(new List<ServiceOrderService> { service }, materials));
+            () => ServiceOrderBudgetCalculator.Calculate(services, new List<ServiceOrderMaterial>(), inactiveInCatalog));
 
         exception.ErrorType.ShouldBe("service-order-budget-inactive-service");
         exception.Message.ShouldContain(serviceId.ToString());
+    }
+
+    [Fact]
+    public void Calculate_InactiveCatalogServiceNotInTheOrder_ShouldNotBlock()
+    {
+        var services = new List<ServiceOrderService> { ServiceOrderService.Create(OrderId, Guid.NewGuid(), 80m) };
+        var inactiveInCatalog = new HashSet<Guid> { Guid.NewGuid() };
+
+        var total = ServiceOrderBudgetCalculator.Calculate(services, new List<ServiceOrderMaterial>(), inactiveInCatalog);
+
+        total.ShouldBe(80m);
+    }
+
+    [Fact]
+    public void Calculate_RemovedRowWhoseCatalogServiceIsInactive_ShouldNotBlock()
+    {
+        var serviceId = Guid.NewGuid();
+        var removed = ServiceOrderService.Create(OrderId, serviceId, 80m);
+        removed.Deactivate();
+        var services = new List<ServiceOrderService> { removed, ServiceOrderService.Create(OrderId, Guid.NewGuid(), 50m) };
+        var inactiveInCatalog = new HashSet<Guid> { serviceId };
+
+        var total = ServiceOrderBudgetCalculator.Calculate(services, new List<ServiceOrderMaterial>(), inactiveInCatalog);
+
+        total.ShouldBe(50m);
     }
 }

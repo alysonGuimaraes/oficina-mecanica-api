@@ -5,6 +5,7 @@ using AutoGarage.CommonTestUtilities.Entities;
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.CommonTestUtilities.Repositories;
 using AutoGarage.CommonTestUtilities.Repositories.Employees;
+using AutoGarage.CommonTestUtilities.Repositories.Services;
 using AutoGarage.CommonTestUtilities.Repositories.ServiceOrders;
 using AutoGarage.Domain.Common.Exceptions;
 using AutoGarage.Domain.Entities;
@@ -69,6 +70,21 @@ public class SendServiceOrderBudgetUseCaseTests
         sut.Orders.Orders[0].BudgetTotal.ShouldBe(150.50m);
     }
 
+    [Fact]
+    public async Task Handle_RemovedServiceRowWithAnotherActiveService_ShouldIgnoreTheRemovedRow()
+    {
+        var employee = EmployeeBuilder.Build("ana@autogarage.com");
+        var order = ServiceOrderBuilder.InStatus(ServiceOrderStatus.IN_DIAGNOSIS, employee.Id);
+        var removed = ServiceOrderService.Create(order.Id, Guid.NewGuid(), 80m);
+        removed.Deactivate();
+        var sut = CreateSut(orders: [order], employees: [employee], services: [removed, ActiveService(order)]);
+
+        await sut.UseCase.Handle(ValidCommand(order, employee), CancellationToken.None);
+
+        sut.Orders.Orders[0].Status.ShouldBe(ServiceOrderStatus.AWAITING_APPROVAL);
+        sut.Orders.Orders[0].BudgetTotal.ShouldBe(150.50m);
+    }
+
     [Theory]
     [InlineData(ServiceOrderStatus.RECEIVED)]
     [InlineData(ServiceOrderStatus.AWAITING_APPROVAL)]
@@ -109,13 +125,14 @@ public class SendServiceOrderBudgetUseCaseTests
     }
 
     [Fact]
-    public async Task Handle_InactiveService_ShouldThrowInactiveServiceAndChangeNothing()
+    public async Task Handle_ActiveServiceInactiveInCatalog_ShouldThrowInactiveServiceAndChangeNothing()
     {
         var employee = EmployeeBuilder.Build("ana@autogarage.com");
         var order = ServiceOrderBuilder.InStatus(ServiceOrderStatus.IN_DIAGNOSIS, employee.Id);
-        var service = ActiveService(order);
-        service.Deactivate();
-        var sut = CreateSut(orders: [order], employees: [employee], services: [service], materials: [ActiveMaterial(order, 6, 12.00m)]);
+        var catalogService = Service.Create("Troca de óleo", null, 150.50m);
+        catalogService.Deactivate();
+        var row = ServiceOrderService.Create(order.Id, catalogService.Id, 150.50m);
+        var sut = CreateSut(orders: [order], employees: [employee], services: [row], catalog: [catalogService], materials: [ActiveMaterial(order, 6, 12.00m)]);
 
         var exception = await Should.ThrowAsync<ServiceOrderBudgetInactiveServiceException>(
             () => sut.UseCase.Handle(ValidCommand(order, employee), CancellationToken.None));
@@ -123,6 +140,23 @@ public class SendServiceOrderBudgetUseCaseTests
         exception.ErrorType.ShouldBe("service-order-budget-inactive-service");
         sut.Orders.Orders[0].Status.ShouldBe(ServiceOrderStatus.IN_DIAGNOSIS);
         sut.UnitWork.CommitCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Handle_RemovedRowWhoseCatalogServiceIsInactive_ShouldNotBlock()
+    {
+        var employee = EmployeeBuilder.Build("ana@autogarage.com");
+        var order = ServiceOrderBuilder.InStatus(ServiceOrderStatus.IN_DIAGNOSIS, employee.Id);
+        var catalogService = Service.Create("Troca de óleo", null, 80m);
+        catalogService.Deactivate();
+        var removed = ServiceOrderService.Create(order.Id, catalogService.Id, 80m);
+        removed.Deactivate();
+        var sut = CreateSut(orders: [order], employees: [employee], services: [removed, ActiveService(order)], catalog: [catalogService]);
+
+        await sut.UseCase.Handle(ValidCommand(order, employee), CancellationToken.None);
+
+        sut.Orders.Orders[0].Status.ShouldBe(ServiceOrderStatus.AWAITING_APPROVAL);
+        sut.Orders.Orders[0].BudgetTotal.ShouldBe(150.50m);
     }
 
     [Fact]
@@ -141,18 +175,33 @@ public class SendServiceOrderBudgetUseCaseTests
     }
 
     [Fact]
-    public async Task Handle_OnlyRemovedServiceExists_ShouldThrowInactiveServiceNotWithoutItems()
+    public async Task Handle_OnlyRemovedServiceRow_ShouldThrowWithoutItems()
     {
         var employee = EmployeeBuilder.Build("ana@autogarage.com");
         var order = ServiceOrderBuilder.InStatus(ServiceOrderStatus.IN_DIAGNOSIS, employee.Id);
-        var service = ActiveService(order);
-        service.Deactivate();
-        var sut = CreateSut(orders: [order], employees: [employee], services: [service]);
+        var removed = ActiveService(order);
+        removed.Deactivate();
+        var sut = CreateSut(orders: [order], employees: [employee], services: [removed]);
 
-        var exception = await Should.ThrowAsync<ServiceOrderBudgetInactiveServiceException>(
+        var exception = await Should.ThrowAsync<ServiceOrderBudgetWithoutItemsException>(
             () => sut.UseCase.Handle(ValidCommand(order, employee), CancellationToken.None));
 
-        exception.ErrorType.ShouldBe("service-order-budget-inactive-service");
+        exception.ErrorType.ShouldBe("service-order-budget-without-items");
+    }
+
+    [Fact]
+    public async Task Handle_OnlyActiveMaterials_ShouldThrowWithoutItemsAndChangeNothing()
+    {
+        var employee = EmployeeBuilder.Build("ana@autogarage.com");
+        var order = ServiceOrderBuilder.InStatus(ServiceOrderStatus.IN_DIAGNOSIS, employee.Id);
+        var sut = CreateSut(orders: [order], employees: [employee], materials: [ActiveMaterial(order, 6, 12.00m)]);
+
+        var exception = await Should.ThrowAsync<ServiceOrderBudgetWithoutItemsException>(
+            () => sut.UseCase.Handle(ValidCommand(order, employee), CancellationToken.None));
+
+        exception.ErrorType.ShouldBe("service-order-budget-without-items");
+        sut.Orders.Orders[0].Status.ShouldBe(ServiceOrderStatus.IN_DIAGNOSIS);
+        sut.UnitWork.CommitCount.ShouldBe(0);
     }
 
     [Fact]
@@ -223,7 +272,8 @@ public class SendServiceOrderBudgetUseCaseTests
         ServiceOrder[]? orders = null,
         Employee[]? employees = null,
         ServiceOrderService[]? services = null,
-        ServiceOrderMaterial[]? materials = null)
+        ServiceOrderMaterial[]? materials = null,
+        Service[]? catalog = null)
     {
         var orderRepository = new FakeServiceOrderRepository();
         foreach (var order in orders ?? [])
@@ -235,6 +285,12 @@ public class SendServiceOrderBudgetUseCaseTests
         foreach (var employee in employees ?? [])
         {
             employeeRepository.WithEmployee(employee);
+        }
+
+        var catalogRepository = new FakeServiceRepository();
+        foreach (var service in catalog ?? [])
+        {
+            catalogRepository.WithService(service);
         }
 
         var serviceRepository = new FakeServiceOrderServiceRepository();
@@ -254,7 +310,7 @@ public class SendServiceOrderBudgetUseCaseTests
         var lookup = new ServiceOrderLookup(orderRepository, employeeRepository);
 
         var useCase = new SendServiceOrderBudgetUseCase(
-            lookup, serviceRepository, materialRepository, orderRepository, historyRepository, unitWork, MapperBuilder.Build());
+            lookup, catalogRepository, serviceRepository, materialRepository, orderRepository, historyRepository, unitWork, MapperBuilder.Build());
 
         return new SendServiceOrderBudgetUseCaseSut(useCase, orderRepository, historyRepository, unitWork);
     }

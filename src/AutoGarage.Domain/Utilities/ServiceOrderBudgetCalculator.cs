@@ -6,22 +6,26 @@ namespace AutoGarage.Domain.Utilities;
 
 public static class ServiceOrderBudgetCalculator
 {
-    public static decimal Calculate(IReadOnlyList<ServiceOrderService> services, IReadOnlyList<ServiceOrderMaterial> materials)
+    public static decimal Calculate(
+        IReadOnlyList<ServiceOrderService> services,
+        IReadOnlyList<ServiceOrderMaterial> materials,
+        IReadOnlySet<Guid> inactiveCatalogServiceIds)
     {
-        var inactiveService = services.FirstOrDefault(s => s.Status == EntityStatus.INACTIVE);
+        var activeServices = services.Where(s => s.Status == EntityStatus.ACTIVE).ToList();
 
-        if (inactiveService is not null)
+        var blockedService = activeServices.FirstOrDefault(s => inactiveCatalogServiceIds.Contains(s.ServiceId));
+
+        if (blockedService is not null)
         {
-            throw new ServiceOrderBudgetInactiveServiceException(inactiveService.ServiceId);
+            throw new ServiceOrderBudgetInactiveServiceException(blockedService.ServiceId);
         }
 
-        var activeServices = services.Where(s => s.Status == EntityStatus.ACTIVE).ToList();
-        var activeMaterials = materials.Where(m => m.Status == EntityStatus.ACTIVE).ToList();
-
-        if (activeServices.Count == 0 && activeMaterials.Count == 0)
+        if (activeServices.Count == 0)
         {
             throw new ServiceOrderBudgetWithoutItemsException();
         }
+
+        var activeMaterials = materials.Where(m => m.Status == EntityStatus.ACTIVE).ToList();
 
         var servicesTotal = activeServices.Sum(s => s.Price);
         var materialsTotal = activeMaterials.Sum(m => m.UnitPrice * m.Quantity);

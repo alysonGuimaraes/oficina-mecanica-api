@@ -6,10 +6,12 @@ using AutoGarage.Domain.Common.Exceptions;
 using AutoGarage.Domain.Enums.ServiceOrders;
 using AutoGarage.Domain.Exceptions.ServiceOrders.Exceptions;
 using AutoGarage.Domain.Repositories;
+using AutoGarage.Domain.Repositories.Services;
 using AutoGarage.Domain.Repositories.ServiceOrders.ServiceOrderMaterials;
 using AutoGarage.Domain.Repositories.ServiceOrders.ServiceOrders;
 using AutoGarage.Domain.Repositories.ServiceOrders.ServiceOrderServices;
 using AutoGarage.Domain.Repositories.ServiceOrders.ServiceOrderStatusHistories;
+using AutoGarage.Domain.Shared;
 using AutoGarage.Domain.Utilities;
 using MapsterMapper;
 
@@ -18,6 +20,7 @@ namespace AutoGarage.Application.UseCases.ServiceOrders.SendServiceOrderBudget;
 public class SendServiceOrderBudgetUseCase : ISendServiceOrderBudgetUseCase
 {
     private readonly ServiceOrderLookup _lookup;
+    private readonly IServiceReadOnlyRepository _serviceReadOnlyRepository;
     private readonly IServiceOrderServiceReadOnlyRepository _serviceOrderServiceReadOnlyRepository;
     private readonly IServiceOrderMaterialReadOnlyRepository _serviceOrderMaterialReadOnlyRepository;
     private readonly IServiceOrderWriteOnlyRepository _serviceOrderWriteOnlyRepository;
@@ -27,6 +30,7 @@ public class SendServiceOrderBudgetUseCase : ISendServiceOrderBudgetUseCase
 
     public SendServiceOrderBudgetUseCase(
         ServiceOrderLookup lookup,
+        IServiceReadOnlyRepository serviceReadOnlyRepository,
         IServiceOrderServiceReadOnlyRepository serviceOrderServiceReadOnlyRepository,
         IServiceOrderMaterialReadOnlyRepository serviceOrderMaterialReadOnlyRepository,
         IServiceOrderWriteOnlyRepository serviceOrderWriteOnlyRepository,
@@ -35,6 +39,7 @@ public class SendServiceOrderBudgetUseCase : ISendServiceOrderBudgetUseCase
         IMapper mapper)
     {
         _lookup = lookup;
+        _serviceReadOnlyRepository = serviceReadOnlyRepository;
         _serviceOrderServiceReadOnlyRepository = serviceOrderServiceReadOnlyRepository;
         _serviceOrderMaterialReadOnlyRepository = serviceOrderMaterialReadOnlyRepository;
         _serviceOrderWriteOnlyRepository = serviceOrderWriteOnlyRepository;
@@ -57,8 +62,11 @@ public class SendServiceOrderBudgetUseCase : ISendServiceOrderBudgetUseCase
 
         var services = await _serviceOrderServiceReadOnlyRepository.GetAllByServiceOrder(order.Id, cancellationToken);
         var materials = await _serviceOrderMaterialReadOnlyRepository.GetAllByServiceOrder(order.Id, cancellationToken);
+        var inactiveCatalogServiceIds = (await _serviceReadOnlyRepository.GetByStatus(EntityStatus.INACTIVE, cancellationToken))
+            .Select(s => s.Id)
+            .ToHashSet();
 
-        var total = ServiceOrderBudgetCalculator.Calculate(services, materials);
+        var total = ServiceOrderBudgetCalculator.Calculate(services, materials, inactiveCatalogServiceIds);
 
         var history = order.SendBudget(total, employeeId);
 
