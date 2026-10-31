@@ -7,6 +7,8 @@ public class FakeServiceOrderServiceRepository : IServiceOrderServiceReadOnlyRep
 {
     private readonly List<ServiceOrderService> _items = [];
 
+    public IReadOnlyList<ServiceOrderService> Items => _items;
+
     public Task<ServiceOrderService?> GetById(Guid id, CancellationToken cancellationToken)
     {
         return Task.FromResult(_items.FirstOrDefault(i => i.Id == id));
