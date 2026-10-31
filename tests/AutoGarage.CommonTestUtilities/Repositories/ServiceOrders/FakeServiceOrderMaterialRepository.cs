@@ -7,6 +7,8 @@ public class FakeServiceOrderMaterialRepository : IServiceOrderMaterialReadOnlyR
 {
     private readonly List<ServiceOrderMaterial> _items = [];
 
+    public IReadOnlyList<ServiceOrderMaterial> Items => _items;
+
     public Task<ServiceOrderMaterial?> GetById(Guid id, CancellationToken cancellationToken)
     {
         return Task.FromResult(_items.FirstOrDefault(i => i.Id == id));
