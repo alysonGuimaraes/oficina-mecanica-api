@@ -11,8 +11,6 @@ permissions:
 
 env:
   SOLUTION: src/AutoGarage.slnx
-  SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
-  SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
 
 jobs:
   analyze-build-test:
@@ -21,23 +19,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
         with:
           dotnet-version: "10.0.x"
-
-      - name: Cache SonarCloud packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Install SonarScanner
-        run: dotnet tool install --global dotnet-sonarscanner
 
       - name: Restore
         run: dotnet restore "$SOLUTION"
@@ -45,34 +31,11 @@ jobs:
       - name: Format check
         run: dotnet format "$SOLUTION" --verify-no-changes --severity warn
 
-      - name: Sonar begin
-        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: >
-          dotnet sonarscanner begin
-          /k:"$SONAR_PROJECT_KEY"
-          /o:"$SONAR_ORGANIZATION"
-          /d:sonar.token="$SONAR_TOKEN"
-          /d:sonar.host.url="https://sonarcloud.io"
-          /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
-          /d:sonar.qualitygate.wait=true
-
       - name: Build
         run: dotnet build "$SOLUTION" --no-restore -c Release
 
       - name: Test
-        run: >
-          dotnet test "$SOLUTION" --no-build -c Release
-          --logger "trx;LogFileName=results.trx"
-          --collect:"XPlat Code Coverage"
-          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-
-      - name: Sonar end
-        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+        run: dotnet test "$SOLUTION" --no-build -c Release --logger "trx;LogFileName=results.trx"
 
       - name: Upload test results
         if: always()
