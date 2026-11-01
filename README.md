@@ -43,6 +43,7 @@ tests/                                   # testes unitários (Domain e Applicati
 
 - [Arquitetura](docs/arquitetura/README.md): camadas, regras de dependência, padrões e fluxo de uma requisição.
 - [Modelo de dados](docs/arquitetura/modelo-de-dados.md): tabelas, colunas e migrations.
+- [Linguagem ubíqua](docs/arquitetura/linguagem-ubiqua.md): glossário do negócio e estados da ordem de serviço.
 - [Princípios de código](docs/principios-de-codigo/Principios-de-Codigo.md): DDD, DRY, KISS, Clean Code e SOLID.
 - [Value objects e entidades](docs/principios-de-codigo/ValueObjects-e-Entidades.md).
 - [Tratamento de erros](docs/principios-de-codigo/ExceptionHandler-ProblemDetails.md).
