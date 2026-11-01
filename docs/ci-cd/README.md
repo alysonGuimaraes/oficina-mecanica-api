@@ -32,7 +32,7 @@ Os workflows utilizam **GitHub Environments** e **Secrets/Vars**:
 | Recurso | Uso |
 |---|---|
 | **Environment `production`** | Gating manual no job `deploy` do `release.yml` (requer aprovação de reviewers). |
-| **Secrets (WIF)** | `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `GCP_PROJECT_ID`, `DB_PASSWORD`, `JWT_KEY`, `PASSWORD_ADDITIONAL_KEY`, `RUNTIME_CONFIG` |
+| **Secrets (WIF)** | `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `GCP_PROJECT_ID`, `DB_PASSWORD`, `JWT_KEY`, `PASSWORD_ADDITIONAL_KEY`, `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`, `RUNTIME_CONFIG` |
 | **Vars** | `GCP_REGION` |
 
 > Autenticação via **Workload Identity Federation (WIF)** (sem chaves JSON).

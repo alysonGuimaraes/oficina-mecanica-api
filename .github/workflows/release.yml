@@ -189,10 +189,16 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_KEY: ${{ secrets.JWT_KEY }}
           PASSWORD_ADDITIONAL_KEY: ${{ secrets.PASSWORD_ADDITIONAL_KEY }}
+          BOOTSTRAP_ADMIN_EMAIL: ${{ secrets.BOOTSTRAP_ADMIN_EMAIL }}
+          BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.BOOTSTRAP_ADMIN_PASSWORD }}
           GCP_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
         run: |
-          if printf '%s\n' "$RUNTIME_CONFIG" | grep -q '^ConnectionStrings__\|^Settings__Jwt__\|^Settings__Password__'; then
-            echo "::error::Remove ConnectionStrings__*, Settings__Jwt__* and Settings__Password__* from RUNTIME_CONFIG; the pipeline builds them."
+          if printf '%s\n' "$RUNTIME_CONFIG" | grep -q '^ConnectionStrings__\|^Settings__Jwt__\|^Settings__Password__\|^Settings__BootstrapAdmin__'; then
+            echo "::error::Remove ConnectionStrings__*, Settings__Jwt__*, Settings__Password__* and Settings__BootstrapAdmin__* from RUNTIME_CONFIG; the pipeline builds them."
+            exit 1
+          fi
+          if [ -z "$BOOTSTRAP_ADMIN_EMAIL" ] || [ -z "$BOOTSTRAP_ADMIN_PASSWORD" ]; then
+            echo "::error::The BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_PASSWORD secrets must be set (first employee, admin)."
             exit 1
           fi
           if [ -z "$JWT_KEY" ]; then
@@ -211,6 +217,8 @@ jobs:
             echo "ConnectionStrings__DefaultConnection=Host=$DB_HOST;Port=5432;Database=autogarage;Username=autogarage_admin;Password=$DB_PASSWORD"
             echo "Settings__Jwt__Key=$JWT_KEY"
             echo "Settings__Password__AdditionalKey=$PASSWORD_ADDITIONAL_KEY"
+            echo "Settings__BootstrapAdmin__Email=$BOOTSTRAP_ADMIN_EMAIL"
+            echo "Settings__BootstrapAdmin__Password=$BOOTSTRAP_ADMIN_PASSWORD"
           } > "$OVERLAY/runtime-config.env"
 
       # Pins the image with an "images" entry appended to the overlay kustomization.
