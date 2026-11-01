@@ -168,3 +168,4 @@ Registro das divergências entre a regra desejada e o código, com a decisão to
 ## Documentos relacionados
 
 - [Modelo de dados](modelo-de-dados.md): schema, migrations e regras de tradução para o código.
+- [Linguagem ubíqua](linguagem-ubiqua.md): glossário do negócio, estados da OS e regras de uso dos termos no código.
