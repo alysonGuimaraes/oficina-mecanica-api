@@ -3,11 +3,13 @@ using AutoGarage.Application.UseCases.Auth.Login;
 using AutoGarage.Communication.Requests.Auth;
 using AutoGarage.Communication.Responses.Auth;
 using MapsterMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AutoGarage.Api.Controllers.Auth;
 
 [ApiController]
+[AllowAnonymous]
 [Route("auth")]
 public class AuthController : ControllerBase
 {
