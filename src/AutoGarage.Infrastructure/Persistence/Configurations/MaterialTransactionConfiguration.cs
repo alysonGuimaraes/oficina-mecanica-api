@@ -25,6 +25,8 @@ public class MaterialTransactionConfiguration : IEntityTypeConfiguration<Materia
         builder.Property(t => t.BalanceAfter)
             .IsRequired();
 
+        builder.Property(t => t.ServiceOrderId);
+
         builder.Property(t => t.CreatedAt)
             .IsRequired();
 

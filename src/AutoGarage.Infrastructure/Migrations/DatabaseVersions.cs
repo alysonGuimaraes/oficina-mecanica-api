@@ -8,4 +8,6 @@ public abstract class DatabaseVersions
     public const int TABLE_SERVICE = 4;
     public const int TABLE_MATERIAL = 5;
     public const int TABLE_MATERIAL_TRANSACTION = 6;
+    public const int TABLE_SERVICE_ORDER = 7;
+    public const int ALTER_SERVICE_ORDER_STATUS_HISTORY_CUSTOMER_ACTOR = 8;
 }

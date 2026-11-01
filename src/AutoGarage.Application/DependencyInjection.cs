@@ -1,4 +1,5 @@
 using AutoGarage.Application.Services.Cryptography;
+using AutoGarage.Application.Services.ServiceOrders;
 using AutoGarage.Application.Services.Normalization;
 using AutoGarage.Application.UseCases.Customers.CreateCustomer;
 using AutoGarage.Application.UseCases.Customers.GetCustomerByDocument;
@@ -34,10 +35,26 @@ using AutoGarage.Application.UseCases.Materials.StockOut;
 using AutoGarage.Application.UseCases.Materials.ListMaterialTransactions;
 using AutoGarage.Application.UseCases.MaterialTransactions.ListAllMaterialTransactions;
 using AutoGarage.Application.UseCases.MaterialTransactions.GetMaterialTransactionById;
+using AutoGarage.Application.UseCases.ServiceOrders.CreateServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.AddMaterialToServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.AddServiceToServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.DeliverServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.DiagnoseServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.GetServiceOrderById;
+using AutoGarage.Application.UseCases.ServiceOrders.RemoveMaterialFromServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.SendServiceOrderBudget;
+using AutoGarage.Application.UseCases.ServiceOrders.CancelServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.CompleteServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.StartServiceOrderExecution;
+using AutoGarage.Application.UseCases.ServiceOrders.RemoveServiceFromServiceOrder;
+using AutoGarage.Application.UseCases.ServiceOrders.ListServiceOrders;
+using AutoGarage.Application.UseCases.ServiceOrders.ListPublicServiceOrders;
+using AutoGarage.Application.UseCases.ServiceOrders.PublicServiceOrderApproval;
 using Mapster;
 using MapsterMapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Reflection;
 
 namespace AutoGarage.Application;
@@ -54,6 +71,8 @@ public static class DependencyInjection
         services.AddSingleton<IStringNormalizer, StringNormalizer>();
 
         AddMapsterConfig(services);
+
+        AddServiceOrderApproval(services, configuration);
 
         return services;
     }
@@ -94,6 +113,37 @@ public static class DependencyInjection
         services.AddScoped<IListMaterialTransactionsUseCase, ListMaterialTransactionsUseCase>();
         services.AddScoped<IListAllMaterialTransactionsUseCase, ListAllMaterialTransactionsUseCase>();
         services.AddScoped<IGetMaterialTransactionByIdUseCase, GetMaterialTransactionByIdUseCase>();
+        services.AddScoped<ICreateServiceOrderUseCase, CreateServiceOrderUseCase>();
+        services.AddScoped<IListServiceOrdersUseCase, ListServiceOrdersUseCase>();
+        services.AddScoped<IGetServiceOrderByIdUseCase, GetServiceOrderByIdUseCase>();
+        services.AddScoped<ServiceOrderLookup>();
+        services.AddScoped<IDiagnoseServiceOrderUseCase, DiagnoseServiceOrderUseCase>();
+        services.AddScoped<IDeliverServiceOrderUseCase, DeliverServiceOrderUseCase>();
+        services.AddScoped<IAddServiceToServiceOrderUseCase, AddServiceToServiceOrderUseCase>();
+        services.AddScoped<IAddMaterialToServiceOrderUseCase, AddMaterialToServiceOrderUseCase>();
+        services.AddScoped<IRemoveServiceFromServiceOrderUseCase, RemoveServiceFromServiceOrderUseCase>();
+        services.AddScoped<IRemoveMaterialFromServiceOrderUseCase, RemoveMaterialFromServiceOrderUseCase>();
+        services.AddScoped<ISendServiceOrderBudgetUseCase, SendServiceOrderBudgetUseCase>();
+        services.AddScoped<ServiceOrderStockDebit>();
+        services.AddScoped<ServiceOrderStockReturn>();
+        services.AddScoped<IStartServiceOrderExecutionUseCase, StartServiceOrderExecutionUseCase>();
+        services.AddScoped<ICompleteServiceOrderUseCase, CompleteServiceOrderUseCase>();
+        services.AddScoped<ICancelServiceOrderUseCase, CancelServiceOrderUseCase>();
+        services.AddScoped<IListPublicServiceOrdersUseCase, ListPublicServiceOrdersUseCase>();
+        services.AddScoped<IPublicServiceOrderApprovalUseCase, PublicServiceOrderApprovalUseCase>();
+    }
+
+    private static void AddServiceOrderApproval(IServiceCollection services, IConfiguration configuration)
+    {
+        var raw = configuration["Settings:ServiceOrders:ApprovalDeadlineDays"];
+
+        if (!int.TryParse(raw, out var deadlineDays) || deadlineDays <= 0)
+        {
+            throw new InvalidOperationException("Settings:ServiceOrders:ApprovalDeadlineDays must be a positive integer.");
+        }
+
+        services.AddSingleton(new ServiceOrderApprovalSettings(deadlineDays));
+        services.TryAddSingleton(TimeProvider.System);
     }
 
     private static void AddPasswordEncripter(IServiceCollection services, IConfiguration configuration)
