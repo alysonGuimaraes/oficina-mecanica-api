@@ -9,6 +9,7 @@ using AutoGarage.Application.UseCases.ServiceOrders.ListServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.RemoveMaterialFromServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.RemoveServiceFromServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.SendServiceOrderBudget;
+using AutoGarage.Application.UseCases.ServiceOrders.StartServiceOrderExecution;
 using AutoGarage.Communication.Requests.ServiceOrders;
 using AutoGarage.Communication.Responses.ServiceOrders;
 using MapsterMapper;
@@ -161,6 +162,21 @@ public class ServiceOrdersController : ControllerBase
         [FromRoute] string id,
         [FromBody] ServiceOrderEmployeeRequest request,
         [FromServices] ISendServiceOrderBudgetUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new ServiceOrderEmployeeCommand(id, request.EmployeeId);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/in-execution")]
+    [ProducesResponseType(typeof(ServiceOrderResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ServiceOrderResponse>> InExecution(
+        [FromRoute] string id,
+        [FromBody] ServiceOrderEmployeeRequest request,
+        [FromServices] IStartServiceOrderExecutionUseCase useCase,
         CancellationToken cancellationToken)
     {
         var command = new ServiceOrderEmployeeCommand(id, request.EmployeeId);
