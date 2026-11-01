@@ -11,7 +11,8 @@ public class ServiceOrderStatusHistory
     public ServiceOrderStatus? ToStatus { get; private set; }
     public Guid? ItemId { get; private set; }
     public ServiceOrderItemDirection? ItemDirection { get; private set; }
-    public Guid EmployeeId { get; private set; }
+    public Guid? EmployeeId { get; private set; }
+    public bool IsCustomerAction { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
     protected ServiceOrderStatusHistory() { }
@@ -23,7 +24,8 @@ public class ServiceOrderStatusHistory
         ServiceOrderStatus? toStatus,
         Guid? itemId,
         ServiceOrderItemDirection? itemDirection,
-        Guid employeeId)
+        Guid? employeeId,
+        bool isCustomerAction)
     {
         Id = Guid.NewGuid();
         ServiceOrderId = serviceOrderId;
@@ -33,12 +35,26 @@ public class ServiceOrderStatusHistory
         ItemId = itemId;
         ItemDirection = itemDirection;
         EmployeeId = employeeId;
+        IsCustomerAction = isCustomerAction;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public static ServiceOrderStatusHistory ForStatusChange(Guid serviceOrderId, ServiceOrderStatus? from, ServiceOrderStatus to, Guid employeeId)
+    public static ServiceOrderStatusHistory ForStatusChange(
+        Guid serviceOrderId,
+        ServiceOrderStatus? from,
+        ServiceOrderStatus to,
+        Guid? employeeId,
+        bool isCustomerAction = false)
     {
-        return new ServiceOrderStatusHistory(serviceOrderId, ServiceOrderEventType.STATUS_CHANGE, from, to, null, null, employeeId);
+        // Exatamente um ator: funcionário (com isCustomerAction false) ou cliente (sem funcionário).
+        var valid = isCustomerAction ? employeeId is null : employeeId is not null;
+
+        if (!valid)
+        {
+            throw new ArgumentException("A status change must have exactly one actor: an employee, or the customer.", nameof(employeeId));
+        }
+
+        return new ServiceOrderStatusHistory(serviceOrderId, ServiceOrderEventType.STATUS_CHANGE, from, to, null, null, employeeId, isCustomerAction);
     }
 
     public static ServiceOrderStatusHistory ForItemChange(Guid serviceOrderId, ServiceOrderEventType eventType, Guid itemId, ServiceOrderItemDirection direction, Guid employeeId)
@@ -48,6 +64,6 @@ public class ServiceOrderStatusHistory
             throw new ArgumentException("Item events must be ITEM_SERVICE or ITEM_MATERIAL.", nameof(eventType));
         }
 
-        return new ServiceOrderStatusHistory(serviceOrderId, eventType, null, null, itemId, direction, employeeId);
+        return new ServiceOrderStatusHistory(serviceOrderId, eventType, null, null, itemId, direction, employeeId, false);
     }
 }

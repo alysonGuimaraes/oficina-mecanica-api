@@ -9,6 +9,7 @@ public record ServiceOrderStatusHistoryResponse(
     ServiceOrderStatus? ToStatus,
     Guid? ItemId,
     ServiceOrderItemDirection? ItemDirection,
-    Guid EmployeeId,
+    Guid? EmployeeId,
+    bool IsCustomerAction,
     DateTime CreatedAt
 );

@@ -64,7 +64,7 @@ public class GetServiceOrderByIdUseCase : IGetServiceOrderByIdUseCase
             history
                 .OrderBy(h => h.CreatedAt)
                 .ThenBy(h => h.Id)
-                .Select(h => new ServiceOrderStatusHistoryResponse(h.Id, h.EventType, h.FromStatus, h.ToStatus, h.ItemId, h.ItemDirection, h.EmployeeId, h.CreatedAt))
+                .Select(h => new ServiceOrderStatusHistoryResponse(h.Id, h.EventType, h.FromStatus, h.ToStatus, h.ItemId, h.ItemDirection, h.EmployeeId, h.IsCustomerAction, h.CreatedAt))
                 .ToList());
     }
 }

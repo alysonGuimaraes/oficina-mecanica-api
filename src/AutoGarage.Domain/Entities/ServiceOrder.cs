@@ -34,14 +34,16 @@ public class ServiceOrder
     }
 
     // Transições sem dados extras. Orçamento, finalização, recusa e cancelamento têm método próprio.
-    public ServiceOrderStatusHistory ChangeStatus(ServiceOrderStatus to, Guid employeeId)
+    public ServiceOrderStatusHistory ChangeStatus(ServiceOrderStatus to, Guid? employeeId, bool isCustomerAction = false)
     {
+        EnsureSingleActor(employeeId, isCustomerAction);
+
         if (to is ServiceOrderStatus.AWAITING_APPROVAL or ServiceOrderStatus.FINISHED or ServiceOrderStatus.CANCELLED)
         {
             throw new InvalidServiceOrderTransitionException(Status, to);
         }
 
-        return MoveTo(to, employeeId);
+        return MoveTo(to, employeeId, isCustomerAction);
     }
 
     public ServiceOrderStatusHistory SendBudget(decimal budgetTotal, Guid employeeId)
@@ -68,23 +70,38 @@ public class ServiceOrder
         return MoveTo(ServiceOrderStatus.FINISHED, employeeId);
     }
 
-    public ServiceOrderStatusHistory Refuse(Guid employeeId)
+    public ServiceOrderStatusHistory Refuse(Guid? employeeId, bool isCustomerAction = false)
     {
+        EnsureSingleActor(employeeId, isCustomerAction);
+
         if (Status != ServiceOrderStatus.AWAITING_APPROVAL)
         {
             throw new InvalidServiceOrderTransitionException(Status, ServiceOrderStatus.FINISHED);
         }
 
-        return MoveTo(ServiceOrderStatus.FINISHED, employeeId);
+        return MoveTo(ServiceOrderStatus.FINISHED, employeeId, isCustomerAction);
     }
 
-    public ServiceOrderStatusHistory Cancel(string reason, Guid employeeId)
+    public ServiceOrderStatusHistory Cancel(string reason, Guid? employeeId, bool isCustomerAction = false)
     {
+        EnsureSingleActor(employeeId, isCustomerAction);
+
         EnsureTransition(ServiceOrderStatus.CANCELLED);
 
         CancellationReason = reason;
 
-        return MoveTo(ServiceOrderStatus.CANCELLED, employeeId);
+        return MoveTo(ServiceOrderStatus.CANCELLED, employeeId, isCustomerAction);
+    }
+
+    // Prazo de resposta do orçamento: vencido somente depois de BudgetSentAt + deadlineDays (estritamente).
+    public bool IsBudgetApprovalExpired(DateTime nowUtc, int deadlineDays)
+    {
+        if (BudgetSentAt is not { } sentAt)
+        {
+            return false;
+        }
+
+        return nowUtc > sentAt.AddDays(deadlineDays);
     }
 
     public void EnsureItemsEditable()
@@ -103,7 +120,17 @@ public class ServiceOrder
         }
     }
 
-    private ServiceOrderStatusHistory MoveTo(ServiceOrderStatus to, Guid employeeId)
+    private static void EnsureSingleActor(Guid? employeeId, bool isCustomerAction)
+    {
+        var valid = isCustomerAction ? employeeId is null : employeeId is not null;
+
+        if (!valid)
+        {
+            throw new ArgumentException("A status change must have exactly one actor: an employee, or the customer.", nameof(employeeId));
+        }
+    }
+
+    private ServiceOrderStatusHistory MoveTo(ServiceOrderStatus to, Guid? employeeId, bool isCustomerAction = false)
     {
         EnsureTransition(to);
 
@@ -111,6 +138,6 @@ public class ServiceOrder
         Status = to;
         UpdatedAt = DateTime.UtcNow;
 
-        return ServiceOrderStatusHistory.ForStatusChange(Id, from, to, employeeId);
+        return ServiceOrderStatusHistory.ForStatusChange(Id, from, to, employeeId, isCustomerAction);
     }
 }
