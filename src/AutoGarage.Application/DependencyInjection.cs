@@ -116,6 +116,7 @@ public static class DependencyInjection
         services.AddScoped<IRemoveServiceFromServiceOrderUseCase, RemoveServiceFromServiceOrderUseCase>();
         services.AddScoped<IRemoveMaterialFromServiceOrderUseCase, RemoveMaterialFromServiceOrderUseCase>();
         services.AddScoped<ISendServiceOrderBudgetUseCase, SendServiceOrderBudgetUseCase>();
+        services.AddScoped<ServiceOrderStockDebit>();
     }
 
     private static void AddPasswordEncripter(IServiceCollection services, IConfiguration configuration)
