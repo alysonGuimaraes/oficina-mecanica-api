@@ -119,6 +119,7 @@ public static class DependencyInjection
         services.AddScoped<IRemoveMaterialFromServiceOrderUseCase, RemoveMaterialFromServiceOrderUseCase>();
         services.AddScoped<ISendServiceOrderBudgetUseCase, SendServiceOrderBudgetUseCase>();
         services.AddScoped<ServiceOrderStockDebit>();
+        services.AddScoped<ServiceOrderStockReturn>();
         services.AddScoped<IStartServiceOrderExecutionUseCase, StartServiceOrderExecutionUseCase>();
         services.AddScoped<ICompleteServiceOrderUseCase, CompleteServiceOrderUseCase>();
     }
