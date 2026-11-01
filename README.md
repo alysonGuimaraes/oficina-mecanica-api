@@ -101,6 +101,8 @@ O estado do Terraform fica em um bucket GCS. A documentação detalhada está em
 
 Detalhes em [docs/ci-cd](docs/ci-cd/README.md).
 
+Documentação detalhada: [Terraform](docs/infraestrutura/terraform.md), com os recursos, o motivo de cada um e como aplicar manualmente; e [Kubernetes](docs/infraestrutura/kubernetes.md), com a separação entre base e overlay, a configuração e como aplicar.
+
 ## Execução local
 
 O `docker-compose.yml` sobe um ambiente de testes efêmero, com PostgreSQL e a API:
