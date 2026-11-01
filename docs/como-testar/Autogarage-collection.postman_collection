@@ -291,9 +291,26 @@
                 "auth",
                 "login"
               ]
+            },
+            "auth": {
+              "type": "noauth"
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body && body.token) {",
+                  "    pm.collectionVariables.set(\"token\", body.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -912,7 +929,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\r\n    \"EmployeeId\": \"{{employeeID}}\"\r\n}",
+                  "raw": "{}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -941,7 +958,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\r\n    \"EmployeeId\": \"{{employeeID}}\"\r\n}",
+                  "raw": "{}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -970,7 +987,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\r\n    \"EmployeeId\": \"{{employeeID}}\"\r\n}",
+                  "raw": "{}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -999,7 +1016,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\r\n    \"EmployeeId\": \"{{employeeID}}\"\r\n}",
+                  "raw": "{}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1028,7 +1045,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\r\n    \"EmployeeId\": \"{{employeeID}}\",\r\n    \"Observation\": \"                Não existe serviço a ser feito                                  \"\r\n}",
+                  "raw": "{\r\n    \"Observation\": \"                Não existe serviço a ser feito                                  \"\r\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1057,7 +1074,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\r\n    \"EmployeeId\": \"{{employeeID}}\",\r\n    \"Reason\": \"                Cancelado fi\"\r\n}",
+                  "raw": "{\r\n    \"Reason\": \"                Cancelado fi\"\r\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1091,7 +1108,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\r\n    \"ServiceId\": \"{{serviceID}}\",\r\n    \"EmployeeId\": \"{{employeeID}}\"\r\n}",
+                  "raw": "{\r\n    \"ServiceId\": \"{{serviceID}}\"\r\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1120,7 +1137,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\r\n    \"MaterialId\": \"{{materialID}}\",\r\n    \"Quantity\": 2,\r\n    \"EmployeeId\": \"{{employeeID}}\"\r\n}",
+                  "raw": "{\r\n    \"MaterialId\": \"{{materialID}}\",\r\n    \"Quantity\": 2\r\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1149,7 +1166,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\r\n    \"ItemId\": \"{{itemID}}\",\r\n    \"EmployeeId\": \"{{employeeID}}\"\r\n}",
+                  "raw": "{\r\n    \"ItemId\": \"{{itemID}}\"\r\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1178,7 +1195,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\r\n    \"ItemId\": \"{{itemID}}\",\r\n    \"EmployeeId\": \"{{employeeID}}\"\r\n}",
+                  "raw": "{\r\n    \"ItemId\": \"{{itemID}}\"\r\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1225,6 +1242,9 @@
                       "value": "11144477735"
                     }
                   ]
+                },
+                "auth": {
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -1254,6 +1274,9 @@
                     "{{serviceOrderID}}",
                     "approval"
                   ]
+                },
+                "auth": {
+                  "type": "noauth"
                 }
               },
               "response": []
@@ -1267,7 +1290,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"CustomerId\": \"{{customerID}}\",\r\n    \"VehicleId\": \"{{vehicleID}}\",\r\n    \"EmployeeId\": \"{{employeeID}}\"\r\n}",
+              "raw": "{\r\n    \"CustomerId\": \"{{customerID}}\",\r\n    \"VehicleId\": \"{{vehicleID}}\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1339,6 +1362,9 @@
           "path": [
             "health"
           ]
+        },
+        "auth": {
+          "type": "noauth"
         }
       },
       "response": []
@@ -1437,6 +1463,20 @@
       "key": "inactiveMaterialID",
       "value": "",
       "type": "default"
+    },
+    {
+      "key": "token",
+      "value": ""
     }
-  ]
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
 }

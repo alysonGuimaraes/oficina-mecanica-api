@@ -52,13 +52,12 @@ public class RequestToCommandMappingTests
     [Fact]
     public void Map_CreateServiceOrderRequest_ShouldKeepValuesUnchanged()
     {
-        var request = new CreateServiceOrderRequest("7d7b1d1e-2b1a-4a7e-9a55-0c6a5b1d2e11", "8e8c2e2f-3c2b-4b8f-8b66-1d7b6c2e3f22", "9f9d3f3a-4d3c-4c9a-9c77-2e8c7d3f4a33");
+        var request = new CreateServiceOrderRequest("7d7b1d1e-2b1a-4a7e-9a55-0c6a5b1d2e11", "8e8c2e2f-3c2b-4b8f-8b66-1d7b6c2e3f22");
 
         var command = _mapper.Map<CreateServiceOrderCommand>(request);
 
         command.CustomerId.ShouldBe("7d7b1d1e-2b1a-4a7e-9a55-0c6a5b1d2e11");
         command.VehicleId.ShouldBe("8e8c2e2f-3c2b-4b8f-8b66-1d7b6c2e3f22");
-        command.EmployeeId.ShouldBe("9f9d3f3a-4d3c-4c9a-9c77-2e8c7d3f4a33");
     }
 
     [Fact]

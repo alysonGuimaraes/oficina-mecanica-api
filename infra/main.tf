@@ -54,22 +54,7 @@ resource "google_artifact_registry_repository" "api_repo" {
 }
 
 # ==========================================
-# 3. SECRET MANAGER
-# ==========================================
-resource "google_secret_manager_secret" "db_password_secret" {
-  secret_id = "autogarage-db-password"
-  replication {
-    auto {}
-  }
-}
-
-resource "google_secret_manager_secret_version" "db_password_version" {
-  secret      = google_secret_manager_secret.db_password_secret.id
-  secret_data = var.db_password
-}
-
-# ==========================================
-# 4. CLOUD SQL (POSTGRESQL) - PRIVATE NETWORK
+# 3. CLOUD SQL (POSTGRESQL) - PRIVATE NETWORK
 # ==========================================
 # Required block to allow Cloud SQL to use private IP within our VPC
 resource "google_compute_global_address" "private_ip_address" {

@@ -191,10 +191,16 @@ jobs:
           PASSWORD_ADDITIONAL_KEY: ${{ secrets.PASSWORD_ADDITIONAL_KEY }}
           BOOTSTRAP_ADMIN_EMAIL: ${{ secrets.BOOTSTRAP_ADMIN_EMAIL }}
           BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.BOOTSTRAP_ADMIN_PASSWORD }}
+          JWT_EXPIRES_IN_MINUTES: ${{ vars.JWT_EXPIRES_IN_MINUTES }}
           GCP_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
         run: |
-          if printf '%s\n' "$RUNTIME_CONFIG" | grep -q '^ConnectionStrings__\|^Settings__Jwt__\|^Settings__Password__\|^Settings__BootstrapAdmin__\|^Settings__TestData__'; then
-            echo "::error::Remove ConnectionStrings__*, Settings__Jwt__*, Settings__Password__*, Settings__BootstrapAdmin__* and Settings__TestData__* from RUNTIME_CONFIG; the pipeline builds them and test data must never run in production."
+          # Only the keys this step writes are reserved here; the others may come from RUNTIME_CONFIG.
+          if printf '%s\n' "$RUNTIME_CONFIG" | grep -q '^ConnectionStrings__\|^Settings__Jwt__Key=\|^Settings__Jwt__ExpiresInMinutes=\|^Settings__Password__\|^Settings__BootstrapAdmin__\|^Settings__TestData__'; then
+            echo "::error::Remove ConnectionStrings__*, Settings__Jwt__Key, Settings__Jwt__ExpiresInMinutes, Settings__Password__*, Settings__BootstrapAdmin__* and Settings__TestData__* from RUNTIME_CONFIG; the pipeline builds them and test data must never run in production."
+            exit 1
+          fi
+          if ! [[ "$JWT_EXPIRES_IN_MINUTES" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::The JWT_EXPIRES_IN_MINUTES variable must be a positive integer (token lifetime in minutes)."
             exit 1
           fi
           if [ -z "$BOOTSTRAP_ADMIN_EMAIL" ] || [ -z "$BOOTSTRAP_ADMIN_PASSWORD" ]; then
@@ -212,14 +218,21 @@ jobs:
           fi
           # --project is explicit: the auth action does not set the gcloud default project.
           DB_HOST=$(gcloud sql instances describe "$DB_INSTANCE" --project "$GCP_PROJECT" --format='value(ipAddresses[0].ipAddress)')
+          # Non-sensitive values go to the ConfigMap (runtime-config.env).
           {
             printf '%s\n' "$RUNTIME_CONFIG"
+            echo "Settings__Jwt__ExpiresInMinutes=$JWT_EXPIRES_IN_MINUTES"
+          } > "$OVERLAY/runtime-config.env"
+
+          # Sensitive values go to the Secret (secret.env): connection string with the password,
+          # JWT signing key, password pepper and the bootstrap admin credentials.
+          {
             echo "ConnectionStrings__DefaultConnection=Host=$DB_HOST;Port=5432;Database=autogarage;Username=autogarage_admin;Password=$DB_PASSWORD"
             echo "Settings__Jwt__Key=$JWT_KEY"
             echo "Settings__Password__AdditionalKey=$PASSWORD_ADDITIONAL_KEY"
             echo "Settings__BootstrapAdmin__Email=$BOOTSTRAP_ADMIN_EMAIL"
             echo "Settings__BootstrapAdmin__Password=$BOOTSTRAP_ADMIN_PASSWORD"
-          } > "$OVERLAY/runtime-config.env"
+          } > "$OVERLAY/secret.env"
 
       # Pins the image with an "images" entry appended to the overlay kustomization.
       # kubectl ships a built-in kustomize, so no kustomize binary is downloaded.

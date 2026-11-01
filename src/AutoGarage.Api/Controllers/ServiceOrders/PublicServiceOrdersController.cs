@@ -3,11 +3,13 @@ using AutoGarage.Application.UseCases.ServiceOrders.ListPublicServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.PublicServiceOrderApproval;
 using AutoGarage.Communication.Requests.ServiceOrders;
 using AutoGarage.Communication.Responses.ServiceOrders;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AutoGarage.Api.Controllers.ServiceOrders;
 
 [ApiController]
+[AllowAnonymous]
 [Route("public/service-orders")]
 public class PublicServiceOrdersController : ControllerBase
 {
