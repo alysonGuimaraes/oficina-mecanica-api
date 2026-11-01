@@ -1,6 +1,5 @@
 namespace AutoGarage.Communication.Requests.ServiceOrders;
 
 public record CompleteServiceOrderRequest(
-    string Observation,
-    string EmployeeId
+    string Observation
 );

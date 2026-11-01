@@ -14,7 +14,7 @@ using AutoGarage.Application.UseCases.ServiceOrders.CompleteServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.StartServiceOrderExecution;
 using AutoGarage.Communication.Requests.ServiceOrders;
 using AutoGarage.Communication.Responses.ServiceOrders;
-using MapsterMapper;
+using AutoGarage.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AutoGarage.Api.Controllers.ServiceOrders;
@@ -23,13 +23,6 @@ namespace AutoGarage.Api.Controllers.ServiceOrders;
 [Route("api/service-orders")]
 public class ServiceOrdersController : ControllerBase
 {
-    private readonly IMapper _mapper;
-
-    public ServiceOrdersController(IMapper mapper)
-    {
-        _mapper = mapper;
-    }
-
     [HttpPost]
     [ProducesResponseType(typeof(ServiceOrderResponse), StatusCodes.Status201Created)]
     public async Task<ActionResult> Create(
@@ -37,7 +30,7 @@ public class ServiceOrdersController : ControllerBase
         [FromBody] CreateServiceOrderRequest request,
         CancellationToken cancellationToken)
     {
-        var command = _mapper.Map<CreateServiceOrderCommand>(request);
+        var command = new CreateServiceOrderCommand(request.CustomerId, request.VehicleId, User.GetEmployeeId());
 
         var result = await useCase.Handle(command, cancellationToken);
 
@@ -72,11 +65,10 @@ public class ServiceOrdersController : ControllerBase
     [ProducesResponseType(typeof(ServiceOrderResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<ServiceOrderResponse>> Diagnosis(
         [FromRoute] string id,
-        [FromBody] ServiceOrderEmployeeRequest request,
         [FromServices] IDiagnoseServiceOrderUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var command = new ServiceOrderEmployeeCommand(id, request.EmployeeId);
+        var command = new ServiceOrderEmployeeCommand(id, User.GetEmployeeId());
 
         var result = await useCase.Handle(command, cancellationToken);
 
@@ -87,11 +79,10 @@ public class ServiceOrdersController : ControllerBase
     [ProducesResponseType(typeof(ServiceOrderResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<ServiceOrderResponse>> Delivery(
         [FromRoute] string id,
-        [FromBody] ServiceOrderEmployeeRequest request,
         [FromServices] IDeliverServiceOrderUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var command = new ServiceOrderEmployeeCommand(id, request.EmployeeId);
+        var command = new ServiceOrderEmployeeCommand(id, User.GetEmployeeId());
 
         var result = await useCase.Handle(command, cancellationToken);
 
@@ -106,7 +97,7 @@ public class ServiceOrdersController : ControllerBase
         [FromServices] IAddServiceToServiceOrderUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var command = new AddServiceToServiceOrderCommand(id, request.ServiceId, request.EmployeeId);
+        var command = new AddServiceToServiceOrderCommand(id, request.ServiceId, User.GetEmployeeId());
 
         var result = await useCase.Handle(command, cancellationToken);
 
@@ -121,7 +112,7 @@ public class ServiceOrdersController : ControllerBase
         [FromServices] IRemoveServiceFromServiceOrderUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var command = new RemoveServiceFromServiceOrderCommand(id, request.ItemId, request.EmployeeId);
+        var command = new RemoveServiceFromServiceOrderCommand(id, request.ItemId, User.GetEmployeeId());
 
         var result = await useCase.Handle(command, cancellationToken);
 
@@ -136,7 +127,7 @@ public class ServiceOrdersController : ControllerBase
         [FromServices] IAddMaterialToServiceOrderUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var command = new AddMaterialToServiceOrderCommand(id, request.MaterialId, request.Quantity, request.EmployeeId);
+        var command = new AddMaterialToServiceOrderCommand(id, request.MaterialId, request.Quantity, User.GetEmployeeId());
 
         var result = await useCase.Handle(command, cancellationToken);
 
@@ -151,7 +142,7 @@ public class ServiceOrdersController : ControllerBase
         [FromServices] IRemoveMaterialFromServiceOrderUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var command = new RemoveMaterialFromServiceOrderCommand(id, request.ItemId, request.EmployeeId);
+        var command = new RemoveMaterialFromServiceOrderCommand(id, request.ItemId, User.GetEmployeeId());
 
         var result = await useCase.Handle(command, cancellationToken);
 
@@ -162,11 +153,10 @@ public class ServiceOrdersController : ControllerBase
     [ProducesResponseType(typeof(ServiceOrderResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<ServiceOrderResponse>> Budget(
         [FromRoute] string id,
-        [FromBody] ServiceOrderEmployeeRequest request,
         [FromServices] ISendServiceOrderBudgetUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var command = new ServiceOrderEmployeeCommand(id, request.EmployeeId);
+        var command = new ServiceOrderEmployeeCommand(id, User.GetEmployeeId());
 
         var result = await useCase.Handle(command, cancellationToken);
 
@@ -177,11 +167,10 @@ public class ServiceOrdersController : ControllerBase
     [ProducesResponseType(typeof(ServiceOrderResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<ServiceOrderResponse>> InExecution(
         [FromRoute] string id,
-        [FromBody] ServiceOrderEmployeeRequest request,
         [FromServices] IStartServiceOrderExecutionUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var command = new ServiceOrderEmployeeCommand(id, request.EmployeeId);
+        var command = new ServiceOrderEmployeeCommand(id, User.GetEmployeeId());
 
         var result = await useCase.Handle(command, cancellationToken);
 
@@ -196,7 +185,7 @@ public class ServiceOrdersController : ControllerBase
         [FromServices] ICompleteServiceOrderUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var command = new CompleteServiceOrderCommand(id, request.Observation, request.EmployeeId);
+        var command = new CompleteServiceOrderCommand(id, request.Observation, User.GetEmployeeId());
 
         var result = await useCase.Handle(command, cancellationToken);
 
@@ -211,7 +200,7 @@ public class ServiceOrdersController : ControllerBase
         [FromServices] ICancelServiceOrderUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var command = new CancelServiceOrderCommand(id, request.Reason, request.EmployeeId);
+        var command = new CancelServiceOrderCommand(id, request.Reason, User.GetEmployeeId());
 
         var result = await useCase.Handle(command, cancellationToken);
 
