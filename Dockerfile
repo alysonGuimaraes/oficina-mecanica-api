@@ -10,12 +10,16 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-# Copy the solution and project files to restore dependencies
-COPY ["src/AutoGarage.slnx", "./"]
+# Copy only the project files of the API and its project references, so the restore
+# layer is cached until a dependency changes. Paths mirror src/ for the relative references.
 COPY ["src/AutoGarage.Api/AutoGarage.Api.csproj", "AutoGarage.Api/"]
+COPY ["src/AutoGarage.Application/AutoGarage.Application.csproj", "AutoGarage.Application/"]
+COPY ["src/AutoGarage.Infrastructure/AutoGarage.Infrastructure.csproj", "AutoGarage.Infrastructure/"]
+COPY ["src/AutoGarage.Domain/AutoGarage.Domain.csproj", "AutoGarage.Domain/"]
+COPY ["src/Shared/AutoGarage.Communication/AutoGarage.Communication.csproj", "Shared/AutoGarage.Communication/"]
 
-# Restore NuGet packages
-RUN dotnet restore "AutoGarage.slnx"
+# Restore NuGet packages for the API project (test projects are not part of the image)
+RUN dotnet restore "AutoGarage.Api/AutoGarage.Api.csproj"
 
 # Copy the remaining source code
 COPY src/ .

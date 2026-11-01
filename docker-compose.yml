@@ -1,14 +1,44 @@
 name: autogarage-local
 
+# Ephemeral test environment: PostgreSQL + API.
+# The database lives in a tmpfs, so nothing persists after `docker compose down`.
+# Start with:   docker compose up --build -d
+# Reset data:   docker compose down && docker compose up --build -d
+# The values below are throwaway test values, not secrets. Never reuse them in production.
+
 services:
+  db:
+    container_name: autogarage-db
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
   api:
     container_name: autogarage-api
     build:
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "7169:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
+      # Connects to the db service by its compose name. The API creates the database and runs migrations on startup.
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=autogarage;Username=postgres;Password=postgres
+      # Outside a developer machine there are no user-secrets, so these keys must be provided explicitly.
+      - Settings__Jwt__Key=compose-test-jwt-key-not-a-secret-0123456789
+      - Settings__Password__AdditionalKey=compose-test-pepper
+      # Seeds the test records (services, materials, customers, vehicles, orders and employees) at startup.
+      - Settings__TestData__Enabled=true
     restart: unless-stopped

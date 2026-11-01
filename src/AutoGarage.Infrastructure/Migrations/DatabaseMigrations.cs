@@ -14,14 +14,24 @@ public static class DatabaseMigrations
         MigrationDatabase(serviceProvider);
     }
 
+    // Connection string for the server-level database used to check and create the target database.
+    // Targets "postgres" explicitly: without a Database key, Npgsql falls back to the username,
+    // which on Cloud SQL (user autogarage_admin) is not an existing database.
+    public static string BuildServerConnectionString(string connectionString)
+    {
+        var builder = new NpgsqlConnectionStringBuilder(connectionString)
+        {
+            Database = "postgres"
+        };
+
+        return builder.ConnectionString;
+    }
+
     private static void EnsureDatabaseCreatedPostgres(string connectionString)
     {
-        var connectionStringBuilder = new NpgsqlConnectionStringBuilder(connectionString);
-        var dataBaseName = connectionStringBuilder.Database;
+        var dataBaseName = new NpgsqlConnectionStringBuilder(connectionString).Database;
 
-        connectionStringBuilder.Remove("Database");
-
-        using var dbConnection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);
+        using var dbConnection = new NpgsqlConnection(BuildServerConnectionString(connectionString));
 
         var parameters = new DynamicParameters();
         parameters.Add("name", dataBaseName);

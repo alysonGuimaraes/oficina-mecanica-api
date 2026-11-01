@@ -25,6 +25,7 @@ concurrency:
 env:
   REGION: ${{ vars.GCP_REGION }}
   CLUSTER: autogarage-k8s-cluster
+  DB_INSTANCE: autogarage-db-instance
   REPO: autogarage-api-repo
   IMAGE_NAME: autogarage-api
   OVERLAY: k8s/overlays/production
@@ -179,22 +180,60 @@ jobs:
           cluster_name: ${{ env.CLUSTER }}
           location: ${{ env.REGION }}
 
-      - name: Install kustomize
-        run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-          sudo mv kustomize /usr/local/bin/kustomize
-
+      # Builds the ConfigMap env file: the non-secret runtime config plus the database
+      # connection string, assembled here from the Cloud SQL private IP and the DB_PASSWORD
+      # GitHub secret. The ConnectionStrings__ key must not come from RUNTIME_CONFIG.
       - name: Write runtime config
         env:
           RUNTIME_CONFIG: ${{ secrets.RUNTIME_CONFIG }}
-        run: printf '%s\n' "$RUNTIME_CONFIG" > "$OVERLAY/runtime-config.env"
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_KEY: ${{ secrets.JWT_KEY }}
+          PASSWORD_ADDITIONAL_KEY: ${{ secrets.PASSWORD_ADDITIONAL_KEY }}
+          BOOTSTRAP_ADMIN_EMAIL: ${{ secrets.BOOTSTRAP_ADMIN_EMAIL }}
+          BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.BOOTSTRAP_ADMIN_PASSWORD }}
+          GCP_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          if printf '%s\n' "$RUNTIME_CONFIG" | grep -q '^ConnectionStrings__\|^Settings__Jwt__\|^Settings__Password__\|^Settings__BootstrapAdmin__\|^Settings__TestData__'; then
+            echo "::error::Remove ConnectionStrings__*, Settings__Jwt__*, Settings__Password__*, Settings__BootstrapAdmin__* and Settings__TestData__* from RUNTIME_CONFIG; the pipeline builds them and test data must never run in production."
+            exit 1
+          fi
+          if [ -z "$BOOTSTRAP_ADMIN_EMAIL" ] || [ -z "$BOOTSTRAP_ADMIN_PASSWORD" ]; then
+            echo "::error::The BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_PASSWORD secrets must be set (first employee, admin)."
+            exit 1
+          fi
+          if [ -z "$JWT_KEY" ]; then
+            echo "::error::The JWT_KEY secret is empty or missing."
+            exit 1
+          fi
+          # Without this key the password hash silently loses its pepper (the app does not fail), so it is mandatory.
+          if [ -z "$PASSWORD_ADDITIONAL_KEY" ]; then
+            echo "::error::The PASSWORD_ADDITIONAL_KEY secret is empty or missing."
+            exit 1
+          fi
+          # --project is explicit: the auth action does not set the gcloud default project.
+          DB_HOST=$(gcloud sql instances describe "$DB_INSTANCE" --project "$GCP_PROJECT" --format='value(ipAddresses[0].ipAddress)')
+          {
+            printf '%s\n' "$RUNTIME_CONFIG"
+            echo "ConnectionStrings__DefaultConnection=Host=$DB_HOST;Port=5432;Database=autogarage;Username=autogarage_admin;Password=$DB_PASSWORD"
+            echo "Settings__Jwt__Key=$JWT_KEY"
+            echo "Settings__Password__AdditionalKey=$PASSWORD_ADDITIONAL_KEY"
+            echo "Settings__BootstrapAdmin__Email=$BOOTSTRAP_ADMIN_EMAIL"
+            echo "Settings__BootstrapAdmin__Password=$BOOTSTRAP_ADMIN_PASSWORD"
+          } > "$OVERLAY/runtime-config.env"
 
+      # Pins the image with an "images" entry appended to the overlay kustomization.
+      # kubectl ships a built-in kustomize, so no kustomize binary is downloaded.
       - name: Pin image in the overlay
         env:
           IMAGE_URI: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
         run: |
-          cd "$OVERLAY"
-          kustomize edit set image autogarage-api-image="$IMAGE_URI"
+          cat >> "$OVERLAY/kustomization.yaml" <<EOF
+
+          images:
+            - name: autogarage-api-image
+              newName: ${IMAGE_URI%:*}
+              newTag: ${IMAGE_TAG}
+          EOF
 
       - name: Deploy
         run: |
@@ -215,9 +254,3 @@ jobs:
           kubectl describe pods -n default -l app=autogarage-api
           echo "=== pod logs ==="
           kubectl logs -n default -l app=autogarage-api --all-containers --tail=200
-          echo "=== externalsecret / secretstore ==="
-          kubectl get externalsecret,secretstore -n default -o yaml
-          echo "=== external-secrets pods ==="
-          kubectl get pods -n external-secrets -o wide
-          echo "=== external-secrets logs ==="
-          kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --tail=200

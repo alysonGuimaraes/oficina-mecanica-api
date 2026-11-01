@@ -7,7 +7,7 @@ Este projeto utiliza **GitHub Actions** para automatizar validação, build, pub
 | Workflow | Arquivo | Trigger | Função |
 |---|---|---|---|
 | **CI** | `ci.yml` | `push` para `main` e `pull_request` | Análise estática, restore, format-check, build e testes. |
-| **Infrastructure** | `infra.yml` | `workflow_dispatch` (manual) | Provisão/destruição da infraestrutura via **Terraform** e configuração dos add-ons do cluster (kubeconfig + External Secrets Operator). |
+| **Infrastructure** | `infra.yml` | `workflow_dispatch` (manual) | Provisão/destruição da infraestrutura via **Terraform** e verificação dos nós do cluster. |
 | **Release** | `release.yml` | `push` de tag `v*` ou `workflow_dispatch` com `tag` | Validação, build/push da imagem no **Artifact Registry**, deploy no **GKE** com aprovação manual via environment `production`. |
 
 ## Fluxo Geral
@@ -16,7 +16,7 @@ Este projeto utiliza **GitHub Actions** para automatizar validação, build, pub
 flowchart TD
     A[Push/PR em main] --> B[CI: format, build, test]
     C[Workflow manual - Infra] --> D[Terraform apply/destroy]
-    D --> E[Configura cluster add-ons]
+    D --> E[Verifica nós do GKE]
     F[Push tag v* ou dispatch] --> G[Release: check image]
     G --> H{Imagem existe?}
     H -- Não --> I[Build + Test]
@@ -32,7 +32,7 @@ Os workflows utilizam **GitHub Environments** e **Secrets/Vars**:
 | Recurso | Uso |
 |---|---|
 | **Environment `production`** | Gating manual no job `deploy` do `release.yml` (requer aprovação de reviewers). |
-| **Secrets (WIF)** | `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `GCP_PROJECT_ID`, `DB_PASSWORD`, `RUNTIME_CONFIG` |
+| **Secrets (WIF)** | `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `GCP_PROJECT_ID`, `DB_PASSWORD`, `JWT_KEY`, `PASSWORD_ADDITIONAL_KEY`, `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`, `RUNTIME_CONFIG` |
 | **Vars** | `GCP_REGION` |
 
 > Autenticação via **Workload Identity Federation (WIF)** (sem chaves JSON).

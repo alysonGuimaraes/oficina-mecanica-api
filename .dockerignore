@@ -1,0 +1,20 @@
+# Build outputs and tool folders from the host (src/ is copied into the image)
+**/bin
+**/obj
+**/.vs
+**/TestResults
+
+# The image only needs src/ (the Dockerfile copies src/ and the solution). Everything else stays out of the build context.
+.git
+.github
+.superpowers
+.gitignore
+IAdocs
+docs
+infra
+k8s
+scripts
+tests
+docker-compose.yml
+LICENSE
+README.md

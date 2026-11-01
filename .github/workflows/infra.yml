@@ -1,8 +1,7 @@
 name: Infrastructure
 
 # Manual, study-oriented. Creates or destroys the whole GCP stack, and on
-# "apply" also configures the cluster add-ons (kubeconfig + External Secrets
-# Operator) so the environment is ready for app releases.
+# "apply" also checks that the GKE nodes are ready for app releases.
 on:
   workflow_dispatch:
     inputs:
@@ -69,7 +68,7 @@ jobs:
         run: terraform destroy -input=false -auto-approve
 
   configure-cluster:
-    name: Configure cluster add-ons
+    name: Check cluster nodes
     needs: terraform
     if: ${{ github.event.inputs.action == 'apply' }}
     runs-on: ubuntu-latest
@@ -95,13 +94,3 @@ jobs:
       - name: Wait for nodes to be ready
         run: kubectl wait --for=condition=Ready nodes --all --timeout=5m
 
-      - name: Setup Helm
-        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
-
-      - name: Install External Secrets Operator
-        run: |
-          helm repo add external-secrets https://charts.external-secrets.io
-          helm repo update
-          helm upgrade --install external-secrets external-secrets/external-secrets \
-            --namespace external-secrets --create-namespace \
-            --timeout 10m --wait

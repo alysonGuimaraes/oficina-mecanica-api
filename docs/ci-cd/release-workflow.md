@@ -140,11 +140,10 @@ Ou seja, deploya mesmo se a image já existia (via `dispatch` ou reutilização)
 | **Checkout** | `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1` | Clona ref alvo. |
 | **Authenticate to Google Cloud** | `google-github-actions/auth@7c6bc770dae815cd3e87ee6cdf493a2p093v` | Autentica. |
 | **Get GKE credentials** | `google-github-actions/get-gke-credentials@3da1e46a907576cefaa90c484278bb5b259dd395` | Configura kubeconfig. |
-| **Install kustomize** | Script curl | Instala Kustomize via script oficial. |
-| **Write runtime config** | `printf '%s\n' "$RUNTIME_CONFIG" > "$OVERLAY/runtime-config.env" | Writes the secret in runtime-config.env in the overlay. Depende de `secrets.RUNTIME_CONFIG`. |
-| **Pin image in the overlay** | `cd "$OVERLAY" & kustomize edit set image autogarage-api-image="$IMAGE_URI"` | Atualiza image tag no overlay. |
+| **Write runtime config** | Script `bash` | Lê o IP privado do Cloud SQL (`gcloud sql instances describe --project`) e escreve `runtime-config.env` no overlay: o conteúdo de `secrets.RUNTIME_CONFIG`, mais `ConnectionStrings__DefaultConnection` (montada com `secrets.DB_PASSWORD`) `Settings__Jwt__Key` (de `secrets.JWT_KEY`), `Settings__Password__AdditionalKey` (de `secrets.PASSWORD_ADDITIONAL_KEY`) e `Settings__BootstrapAdmin__*` (de `secrets.BOOTSTRAP_ADMIN_EMAIL` e `secrets.BOOTSTRAP_ADMIN_PASSWORD`). Falha se algum desses secrets estiver vazio, ou se `RUNTIME_CONFIG` já tiver `ConnectionStrings__*`, `Settings__Jwt__*`, `Settings__Password__*`, `Settings__BootstrapAdmin__*` ou `Settings__TestData__*`. Dados de teste nunca podem ser ativados em produção por essa via. |
+| **Pin image in the overlay** | Script `bash` (heredoc) | Acrescenta ao `kustomization.yaml` do overlay um bloco `images:` com `newName` e `newTag` da imagem. Não baixa binário: o `kubectl apply -k` usa o kustomize embutido. |
 | **Deploy** | `kubectl apply -k "$OVERLAY"` & `kubectl rollout status deployment/autogarage-api-deployment --timeout=180s` | Aplica manifestos Kustomize e aguarda rollout completo. |
-| **Debug rollout failure** | *se falha* | Coleta pods, deployment, events, logs, ExternalSecrets, SecretStore e logs do External Secrets Operator. Útil for debugging. 
+| **Debug rollout failure** | *se falha* | Coleta pods, deployment, events e logs da aplicação. Útil for debugging. 
 
 ## Fluxo Resumido
 
@@ -158,7 +157,8 @@ Ou seja, deploya mesmo se a image já existia (via `dispatch` ou reutilização)
 - **Imagens imutáveis:** Nunca reescreve imagem existente. Usa tag como histórico.
 - **Approval gate:** `environment: production` força aprovação manual antes de aplicar em GKE.
 - **Kustomize:** Gerenciamento de manifests com overlays (`k8s/overlays/production`).
-- **Runtime config:** Arquivo `runtime-config.env` criado via secret `RUNTIME_CONFIG` (provavelmente ligado ao **External Secrets**).
+- **Runtime config:** Arquivo `runtime-config.env` vira o ConfigMap `autogarage-api-config`. Contém o secret `RUNTIME_CONFIG` e a string de conexão montada no pipeline. A senha fica no ConfigMap, em texto puro no cluster, por escolha de projeto de estudo.
+- **Primeiro acesso (admin):** na subida, a API cria um funcionário `Admin` com o e-mail e a senha dos secrets `BOOTSTRAP_ADMIN_EMAIL` e `BOOTSTRAP_ADMIN_PASSWORD`. Ele é um funcionário `ATTENDANT`, com o mesmo acesso dos demais, porque o domínio não tem papel de administrador. A criação só acontece se o e-mail ainda não existir: deploys seguintes não alteram a senha. Para trocar a senha depois do primeiro acesso, use o próprio sistema, não o secret.
 - **Rollback:** Com `workflow_dispatch` e tag existente, pode re-deployar tag antiga sem build/push.
 - **Debug embutido:** Em caso de falha, coleta logs e eventos do cluster para facilitar investigação.
 - **WIF & menores privilégios:** Uso de Workload Identity Federation e `permissions` restritas.
