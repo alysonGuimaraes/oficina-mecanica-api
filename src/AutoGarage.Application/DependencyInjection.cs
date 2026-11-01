@@ -49,10 +49,12 @@ using AutoGarage.Application.UseCases.ServiceOrders.StartServiceOrderExecution;
 using AutoGarage.Application.UseCases.ServiceOrders.RemoveServiceFromServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.ListServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.ListPublicServiceOrders;
+using AutoGarage.Application.UseCases.ServiceOrders.PublicServiceOrderApproval;
 using Mapster;
 using MapsterMapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Reflection;
 
 namespace AutoGarage.Application;
@@ -69,6 +71,8 @@ public static class DependencyInjection
         services.AddSingleton<IStringNormalizer, StringNormalizer>();
 
         AddMapsterConfig(services);
+
+        AddServiceOrderApproval(services, configuration);
 
         return services;
     }
@@ -126,6 +130,20 @@ public static class DependencyInjection
         services.AddScoped<ICompleteServiceOrderUseCase, CompleteServiceOrderUseCase>();
         services.AddScoped<ICancelServiceOrderUseCase, CancelServiceOrderUseCase>();
         services.AddScoped<IListPublicServiceOrdersUseCase, ListPublicServiceOrdersUseCase>();
+        services.AddScoped<IPublicServiceOrderApprovalUseCase, PublicServiceOrderApprovalUseCase>();
+    }
+
+    private static void AddServiceOrderApproval(IServiceCollection services, IConfiguration configuration)
+    {
+        var raw = configuration["Settings:ServiceOrders:ApprovalDeadlineDays"];
+
+        if (!int.TryParse(raw, out var deadlineDays) || deadlineDays <= 0)
+        {
+            throw new InvalidOperationException("Settings:ServiceOrders:ApprovalDeadlineDays must be a positive integer.");
+        }
+
+        services.AddSingleton(new ServiceOrderApprovalSettings(deadlineDays));
+        services.TryAddSingleton(TimeProvider.System);
     }
 
     private static void AddPasswordEncripter(IServiceCollection services, IConfiguration configuration)
