@@ -91,19 +91,17 @@ env:
 | **Authenticate to Google Cloud** | `google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093` | Autentica no GCP. |
 | **Get GKE credentials** | `google-github-actions/get-gke-credentials@3da1e46a907576cefaa90c484278bb5b259dd395` | Configura `kubeconfig` para acessar o cluster. |
 | **Wait for nodes to be ready** | `kubectl wait --for=condition=Ready nodes --all --timeout=5m` | Aguarda nós do GKE ficarem prontos. |
-| **Setup Helm** | `azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310` | Instala Helm. |
-| **Install External Secrets Operator** | *Helm upgrade/install* | Adiciona repo `external-secrets`, atualiza e instala via Helm no namespace `external-seops`/`external-secrets`. (conforme step: `external-secrets --namespace external-secrets --create-namespace`) |
 
 ## Quando usar
 
 - **Bootstrap inicial:** `apply` para criar toda infraestrutura (VPC, GKE, Artifact Registry, Cloud SQL, etc.)
 - **Zerar ambiente:** `destroy` para remover tudo (cuidado com dados!)
-- **Atualizar add-ons:** Caso necessário após recriação do cluster, pode rodar manualmente.
+- **Recriação do cluster:** Não há mais add-ons a instalar. O deploy do app é feito pelo `release.yml`.
 
 ## Pontos Importantes
 
 - **Manual:** Não roda automaticamente. Evita custos acidentais.
 - **Estado Terraform:** Deve utilizar backend remoto (geralmente GCS) para controle compartilhado.
 - **Idempotente:** `terraform plan/apply` garantem configuração desejada.
-- **Add-ons críticos:** **External Secrets Operator** é instalado para integrar com **Secret Manager/External Secrets** no deploy.
+- **Secret Manager:** O secret `autogarage-db-password` continua provisionado, mas nenhum workload o lê. A senha usada pela aplicação vem do secret `DB_PASSWORD` do GitHub, montada pelo `release.yml`.
 - **Aprovação segura:** `cancel-in-progress: false` garante operação completa. 

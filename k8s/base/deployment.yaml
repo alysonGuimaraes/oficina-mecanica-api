@@ -22,8 +22,6 @@ spec:
         envFrom:
         - configMapRef:
             name: autogarage-api-config
-        - secretRef:
-            name: autogarage-api-secrets
         readinessProbe:
           httpGet:
             path: /health
