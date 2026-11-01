@@ -1,11 +1,11 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using FluentValidation;
 
-namespace AutoGarage.Application.UseCases.ServiceOrders;
+namespace AutoGarage.Application.UseCases.ServiceOrders.RemoveMaterialFromServiceOrder;
 
-public class RemoveServiceFromServiceOrderValidator : AbstractValidator<RemoveServiceFromServiceOrderCommand>
+public class RemoveMaterialFromServiceOrderValidator : AbstractValidator<RemoveMaterialFromServiceOrderCommand>
 {
-    public RemoveServiceFromServiceOrderValidator()
+    public RemoveMaterialFromServiceOrderValidator()
     {
         RuleFor(command => command.ItemId)
             .NotEmpty().WithMessage("The itemId field is required.");

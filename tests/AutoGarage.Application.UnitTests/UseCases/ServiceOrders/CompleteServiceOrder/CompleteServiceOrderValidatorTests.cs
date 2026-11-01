@@ -1,8 +1,8 @@
 using AutoGarage.Application.Commands.ServiceOrders;
-using AutoGarage.Application.UseCases.ServiceOrders;
+using AutoGarage.Application.UseCases.ServiceOrders.CompleteServiceOrder;
 using Shouldly;
 
-namespace AutoGarage.Application.UnitTests.UseCases.ServiceOrders;
+namespace AutoGarage.Application.UnitTests.UseCases.ServiceOrders.CompleteServiceOrder;
 
 public class CompleteServiceOrderValidatorTests
 {

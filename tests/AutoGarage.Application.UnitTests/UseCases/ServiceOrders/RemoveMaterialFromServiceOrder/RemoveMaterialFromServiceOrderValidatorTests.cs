@@ -1,8 +1,8 @@
 using AutoGarage.Application.Commands.ServiceOrders;
-using AutoGarage.Application.UseCases.ServiceOrders;
+using AutoGarage.Application.UseCases.ServiceOrders.RemoveMaterialFromServiceOrder;
 using Shouldly;
 
-namespace AutoGarage.Application.UnitTests.UseCases.ServiceOrders;
+namespace AutoGarage.Application.UnitTests.UseCases.ServiceOrders.RemoveMaterialFromServiceOrder;
 
 public class RemoveMaterialFromServiceOrderValidatorTests
 {

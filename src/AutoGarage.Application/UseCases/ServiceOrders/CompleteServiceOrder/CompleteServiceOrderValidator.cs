@@ -1,7 +1,7 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using FluentValidation;
 
-namespace AutoGarage.Application.UseCases.ServiceOrders;
+namespace AutoGarage.Application.UseCases.ServiceOrders.CompleteServiceOrder;
 
 public class CompleteServiceOrderValidator : AbstractValidator<CompleteServiceOrderCommand>
 {

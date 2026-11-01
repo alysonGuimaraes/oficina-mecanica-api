@@ -1,7 +1,7 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using FluentValidation;
 
-namespace AutoGarage.Application.UseCases.ServiceOrders;
+namespace AutoGarage.Application.UseCases.ServiceOrders.AddMaterialToServiceOrder;
 
 public class AddMaterialToServiceOrderValidator : AbstractValidator<AddMaterialToServiceOrderCommand>
 {

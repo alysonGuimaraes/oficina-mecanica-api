@@ -1,3 +1,4 @@
+using AutoGarage.Application.UseCases.ServiceOrders.Shared;
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.Services.ServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders;

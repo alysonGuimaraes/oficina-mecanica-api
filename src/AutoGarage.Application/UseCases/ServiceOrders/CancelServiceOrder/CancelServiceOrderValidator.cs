@@ -1,7 +1,7 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using FluentValidation;
 
-namespace AutoGarage.Application.UseCases.ServiceOrders;
+namespace AutoGarage.Application.UseCases.ServiceOrders.CancelServiceOrder;
 
 public class CancelServiceOrderValidator : AbstractValidator<CancelServiceOrderCommand>
 {
