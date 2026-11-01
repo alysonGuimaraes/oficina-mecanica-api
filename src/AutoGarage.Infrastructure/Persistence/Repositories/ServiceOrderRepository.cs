@@ -31,6 +31,16 @@ public class ServiceOrderRepository : IServiceOrderReadOnlyRepository, IServiceO
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ServiceOrder>> GetAllByCustomerExcludingStatus(Guid customerId, ServiceOrderStatus excludedStatus, CancellationToken cancellationToken)
+    {
+        return await _context.ServiceOrders
+            .AsNoTracking()
+            .Where(o => o.CustomerId == customerId && o.Status != excludedStatus)
+            .OrderBy(o => o.CreatedAt)
+            .ThenBy(o => o.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task Add(ServiceOrder serviceOrder, CancellationToken cancellationToken)
     {
         await _context.ServiceOrders.AddAsync(serviceOrder, cancellationToken);

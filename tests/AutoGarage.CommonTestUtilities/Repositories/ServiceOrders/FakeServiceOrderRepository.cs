@@ -26,6 +26,17 @@ public class FakeServiceOrderRepository : IServiceOrderReadOnlyRepository, IServ
         return Task.FromResult(result);
     }
 
+    public Task<IReadOnlyList<ServiceOrder>> GetAllByCustomerExcludingStatus(Guid customerId, ServiceOrderStatus excludedStatus, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<ServiceOrder> result = _orders
+            .Where(o => o.CustomerId == customerId && o.Status != excludedStatus)
+            .OrderBy(o => o.CreatedAt)
+            .ThenBy(o => o.Id)
+            .ToList();
+
+        return Task.FromResult(result);
+    }
+
     public Task Add(ServiceOrder serviceOrder, CancellationToken cancellationToken)
     {
         _orders.Add(serviceOrder);
