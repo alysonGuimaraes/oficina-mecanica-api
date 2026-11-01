@@ -9,6 +9,7 @@ using AutoGarage.Application.UseCases.ServiceOrders.ListServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.RemoveMaterialFromServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.RemoveServiceFromServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.SendServiceOrderBudget;
+using AutoGarage.Application.UseCases.ServiceOrders.CancelServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.CompleteServiceOrder;
 using AutoGarage.Application.UseCases.ServiceOrders.StartServiceOrderExecution;
 using AutoGarage.Communication.Requests.ServiceOrders;
@@ -196,6 +197,21 @@ public class ServiceOrdersController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new CompleteServiceOrderCommand(id, request.Observation, request.EmployeeId);
+
+        var result = await useCase.Handle(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/cancellation")]
+    [ProducesResponseType(typeof(ServiceOrderResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ServiceOrderResponse>> Cancellation(
+        [FromRoute] string id,
+        [FromBody] CancelServiceOrderRequest request,
+        [FromServices] ICancelServiceOrderUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new CancelServiceOrderCommand(id, request.Reason, request.EmployeeId);
 
         var result = await useCase.Handle(command, cancellationToken);
 
