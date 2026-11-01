@@ -103,5 +103,5 @@ env:
 - **Manual:** Não roda automaticamente. Evita custos acidentais.
 - **Estado Terraform:** Deve utilizar backend remoto (geralmente GCS) para controle compartilhado.
 - **Idempotente:** `terraform plan/apply` garantem configuração desejada.
-- **Secret Manager:** O secret `autogarage-db-password` continua provisionado, mas nenhum workload o lê. A senha usada pela aplicação vem do secret `DB_PASSWORD` do GitHub, montada pelo `release.yml`.
+- **Segredos:** o Terraform não cria mais nenhum secret no GCP Secret Manager. A senha do banco vem do secret `DB_PASSWORD` do GitHub, e a pipeline de release a grava no Secret do Kubernetes.
 - **Aprovação segura:** `cancel-in-progress: false` garante operação completa. 

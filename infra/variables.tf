@@ -10,7 +10,7 @@ variable "region" {
 }
 
 variable "db_password" {
-  description = "The database password to be stored in Secret Manager and used in Cloud SQL"
+  description = "The database password used by the Cloud SQL user (the application receives it through the pipeline)"
   type        = string
   sensitive   = true
 }
