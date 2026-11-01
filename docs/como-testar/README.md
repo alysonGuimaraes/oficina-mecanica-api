@@ -40,6 +40,17 @@ A resposta esperada é `Healthy`. Se a API ainda não estiver pronta, aguarde al
 docker compose logs -f api
 ```
 
+## Autenticação
+
+Todas as rotas exigem um token JWT, exceto `POST /auth/login`, `GET /health`, `GET /public/service-orders` e `POST /public/service-orders/{id}/approval`.
+
+- O token vem do login e vale **15 minutos**. Depois disso a API responde `401`, e é preciso fazer login de novo.
+- Envie o token no cabeçalho `Authorization: Bearer <token>`.
+- O funcionário que realiza a ação é o que está no token. Os requests de ordem de serviço **não** recebem `employeeId`: se o corpo trouxer esse campo, ele é ignorado.
+- Um funcionário desativado mantém acesso até o token expirar, porque o status não é consultado a cada requisição.
+
+Na collection do Postman, o login guarda o token automaticamente na variável `token`, e todas as requisições internas usam essa variável.
+
 ## Dados de teste
 
 Na subida, o compose cria um conjunto fixo de registros (`Settings:TestData:Enabled=true`). Assim você já tem o que consultar e usar sem precisar cadastrar nada antes:
@@ -78,17 +89,21 @@ Depois do `docker compose up`, estes comandos confirmam que o ambiente está pro
 # API no ar
 curl http://localhost:7169/health                      # Healthy
 
-# Login do mecânico (guarde o token da resposta)
+# Login do mecânico: copie o valor de "token" da resposta para TOKEN
 curl -X POST http://localhost:7169/auth/login \
   -H "Content-Type: application/json" \
   -d '{"Email":"mecanico@autogarage.local","Password":"Teste@123"}'
+TOKEN="cole-o-token-aqui"
 
-# Consulta pública de um dos clientes de teste (CPF 529.982.247-25)
+# Consulta pública de um dos clientes de teste (CPF 529.982.247-25), sem token
 curl "http://localhost:7169/public/service-orders?document=52998224725"   # 1 ordem em RECEIVED
 
-# Serviços e materiais
-curl http://localhost:7169/api/services                # Troca de óleo (ativo)
-curl http://localhost:7169/api/materials               # Filtro de óleo (10) e Pastilha de freio (0)
+# Serviços e materiais (exigem token)
+curl -H "Authorization: Bearer $TOKEN" http://localhost:7169/api/services     # Troca de óleo (ativo)
+curl -H "Authorization: Bearer $TOKEN" http://localhost:7169/api/materials    # Filtro de óleo (10) e Pastilha de freio (0)
+
+# Sem token, a API responde 401
+curl -i http://localhost:7169/api/services                                    # 401
 ```
 
 Confira também o banco: `docker compose exec db psql -U postgres -d autogarage -c 'select count(*) from service_orders;'` deve retornar `3`.
