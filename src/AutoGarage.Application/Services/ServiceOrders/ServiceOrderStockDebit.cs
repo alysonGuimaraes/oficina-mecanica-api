@@ -27,6 +27,27 @@ public class ServiceOrderStockDebit
         _materialTransactionWriteOnlyRepository = materialTransactionWriteOnlyRepository;
     }
 
+    // Só lê: não altera saldo nem cria transação. Usado para decidir entre IN_EXECUTION e AWAITING_MATERIALS.
+    public async Task<bool> HasSufficientStockAsync(ServiceOrder order, CancellationToken cancellationToken)
+    {
+        var rows = (await _serviceOrderMaterialReadOnlyRepository.GetAllByServiceOrder(order.Id, cancellationToken))
+            .Where(r => r.Status == EntityStatus.ACTIVE)
+            .ToList();
+
+        foreach (var row in rows)
+        {
+            var material = await _materialReadOnlyRepository.GetById(row.MaterialId, cancellationToken)
+                ?? throw new MaterialNotFoundException(row.MaterialId);
+
+            if (material.StockQuantity < row.Quantity)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // Não confirma nada: quem chama faz o Commit, junto com a mudança de status.
     public async Task DebitActiveMaterialsAsync(ServiceOrder order, CancellationToken cancellationToken)
     {

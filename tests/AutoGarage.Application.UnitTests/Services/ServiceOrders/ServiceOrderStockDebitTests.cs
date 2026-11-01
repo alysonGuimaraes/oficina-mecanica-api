@@ -100,6 +100,49 @@ public class ServiceOrderStockDebitTests
         sut.Transactions.Transactions.ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task HasSufficientStockAsync_EnoughForAllActiveRows_ReturnsTrue()
+    {
+        var order = ServiceOrder.Create(Guid.NewGuid(), Guid.NewGuid());
+        var parafuso = StockedMaterial(10);
+        var porca = StockedMaterial(5);
+        var sut = CreateSut(materials: [parafuso, porca], rows: [Row(order, parafuso, 3), Row(order, porca, 2)]);
+
+        var result = await sut.Debit.HasSufficientStockAsync(order, CancellationToken.None);
+
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task HasSufficientStockAsync_OneShortage_ReturnsFalse_AndNothingChanges()
+    {
+        var order = ServiceOrder.Create(Guid.NewGuid(), Guid.NewGuid());
+        var enough = StockedMaterial(10);
+        var short_ = StockedMaterial(1);
+        var sut = CreateSut(materials: [enough, short_], rows: [Row(order, enough, 3), Row(order, short_, 2)]);
+
+        var result = await sut.Debit.HasSufficientStockAsync(order, CancellationToken.None);
+
+        result.ShouldBeFalse();
+        enough.StockQuantity.ShouldBe(10);
+        short_.StockQuantity.ShouldBe(1);
+        sut.Transactions.Transactions.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task HasSufficientStockAsync_IgnoresInactiveRows()
+    {
+        var order = ServiceOrder.Create(Guid.NewGuid(), Guid.NewGuid());
+        var material = StockedMaterial(10);
+        var removed = Row(order, material, 50);
+        removed.Deactivate();
+        var sut = CreateSut(materials: [material], rows: [removed, Row(order, material, 4)]);
+
+        var result = await sut.Debit.HasSufficientStockAsync(order, CancellationToken.None);
+
+        result.ShouldBeTrue();
+    }
+
     private static Material StockedMaterial(int stock)
     {
         var material = Material.Create("PARAFUSO", null, 2.50m, 1);
