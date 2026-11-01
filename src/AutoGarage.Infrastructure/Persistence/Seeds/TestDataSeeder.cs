@@ -12,19 +12,29 @@ namespace AutoGarage.Infrastructure.Persistence.Seeds;
 // Passwords go through the same PasswordEncripter as the application, so logins work with the configured pepper.
 public static class TestDataSeeder
 {
-    public const string TestPassword = "Teste@123";
-
     private const string MechanicEmail = "mecanico@autogarage.local";
 
-    public static async Task SeedAsync(AppDbContext context, PasswordEncripter passwordEncripter, CancellationToken cancellationToken)
+    private const int MinimumPasswordLength = 6;
+
+    // The password of the test employees comes from configuration (Settings:TestData:Password), never from code.
+    public static async Task SeedAsync(
+        AppDbContext context,
+        PasswordEncripter passwordEncripter,
+        string password,
+        CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(password) || password.Length < MinimumPasswordLength)
+        {
+            throw new ArgumentException($"The test data password must be at least {MinimumPasswordLength} characters long.", nameof(password));
+        }
+
         // Idempotent: the mechanic is the marker of a previous seed run.
         if (await context.Employees.AnyAsync(e => e.Email == MechanicEmail, cancellationToken))
         {
             return;
         }
 
-        var passwordHash = passwordEncripter.Encrypt(TestPassword);
+        var passwordHash = passwordEncripter.Encrypt(password);
 
         var mechanic = Employee.Create("Mecânico Teste", MechanicEmail, passwordHash, EmployeeRole.MECHANIC);
         var attendant = Employee.Create("Atendente Teste", "atendente@autogarage.local", passwordHash, EmployeeRole.ATTENDANT);

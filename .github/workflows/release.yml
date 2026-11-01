@@ -193,8 +193,8 @@ jobs:
           BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.BOOTSTRAP_ADMIN_PASSWORD }}
           GCP_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
         run: |
-          if printf '%s\n' "$RUNTIME_CONFIG" | grep -q '^ConnectionStrings__\|^Settings__Jwt__\|^Settings__Password__\|^Settings__BootstrapAdmin__'; then
-            echo "::error::Remove ConnectionStrings__*, Settings__Jwt__*, Settings__Password__* and Settings__BootstrapAdmin__* from RUNTIME_CONFIG; the pipeline builds them."
+          if printf '%s\n' "$RUNTIME_CONFIG" | grep -q '^ConnectionStrings__\|^Settings__Jwt__\|^Settings__Password__\|^Settings__BootstrapAdmin__\|^Settings__TestData__'; then
+            echo "::error::Remove ConnectionStrings__*, Settings__Jwt__*, Settings__Password__*, Settings__BootstrapAdmin__* and Settings__TestData__* from RUNTIME_CONFIG; the pipeline builds them and test data must never run in production."
             exit 1
           fi
           if [ -z "$BOOTSTRAP_ADMIN_EMAIL" ] || [ -z "$BOOTSTRAP_ADMIN_PASSWORD" ]; then

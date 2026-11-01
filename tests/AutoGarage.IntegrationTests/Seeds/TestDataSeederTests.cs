@@ -14,6 +14,8 @@ public class TestDataSeederTests
 {
     private static readonly PasswordEncripter Encripter = new("test-pepper");
 
+    private const string SeedPassword = "SeedPassword@1";
+
     private readonly string _databaseName = Guid.NewGuid().ToString();
 
     [Fact]
@@ -78,8 +80,8 @@ public class TestDataSeederTests
 
         foreach (var employee in employees)
         {
-            employee.PasswordHash.ShouldNotBe(TestDataSeeder.TestPassword);
-            Encripter.Verify(TestDataSeeder.TestPassword, employee.PasswordHash).ShouldBeTrue();
+            employee.PasswordHash.ShouldNotBe(SeedPassword);
+            Encripter.Verify(SeedPassword, employee.PasswordHash).ShouldBeTrue();
         }
     }
 
@@ -99,10 +101,24 @@ public class TestDataSeederTests
         (await context.ServiceOrders.CountAsync()).ShouldBe(3);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("12345")]
+    public async Task SeedAsync_WithoutAUsablePassword_ShouldThrowAndCreateNothing(string password)
+    {
+        await using var context = CreateContext();
+
+        await Should.ThrowAsync<ArgumentException>(
+            () => TestDataSeeder.SeedAsync(context, Encripter, password, CancellationToken.None));
+
+        (await context.Employees.CountAsync()).ShouldBe(0);
+    }
+
     private async Task SeedAsync()
     {
         await using var context = CreateContext();
-        await TestDataSeeder.SeedAsync(context, Encripter, CancellationToken.None);
+        await TestDataSeeder.SeedAsync(context, Encripter, SeedPassword, CancellationToken.None);
     }
 
     private AppDbContext CreateContext() =>

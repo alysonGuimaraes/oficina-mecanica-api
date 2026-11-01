@@ -68,6 +68,7 @@ async Task SeedTestDataAsync()
     await TestDataSeeder.SeedAsync(
         scope.ServiceProvider.GetRequiredService<AppDbContext>(),
         scope.ServiceProvider.GetRequiredService<PasswordEncripter>(),
+        builder.Configuration["Settings:TestData:Password"] ?? string.Empty,
         CancellationToken.None);
 }
 
