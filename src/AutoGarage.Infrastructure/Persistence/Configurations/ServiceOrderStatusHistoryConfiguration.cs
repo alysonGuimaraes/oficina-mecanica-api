@@ -33,7 +33,10 @@ public class ServiceOrderStatusHistoryConfiguration : IEntityTypeConfiguration<S
         builder.Property(h => h.ItemDirection)
             .HasConversion<int>();
 
-        builder.Property(h => h.EmployeeId)
+        // Nulo quando a mudança foi feita pelo cliente (IsCustomerAction = true).
+        builder.Property(h => h.EmployeeId);
+
+        builder.Property(h => h.IsCustomerAction)
             .IsRequired();
 
         builder.Property(h => h.CreatedAt)

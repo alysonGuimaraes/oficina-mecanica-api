@@ -64,6 +64,23 @@ public class ServiceOrderStatusHistoryRepositoryTests
         result.Select(h => h.Id).ShouldBe(expected);
     }
 
+    [Fact]
+    public async Task Add_CustomerAction_ShouldPersistNullEmployeeAndFlag()
+    {
+        var serviceOrderId = Guid.NewGuid();
+        var history = ServiceOrderStatusHistory.ForStatusChange(serviceOrderId, ServiceOrderStatus.AWAITING_APPROVAL, ServiceOrderStatus.IN_EXECUTION, null, true);
+
+        await SaveAsync(history);
+
+        await using var context = CreateContext();
+        var result = await new ServiceOrderStatusHistoryRepository(context).GetAllByServiceOrder(serviceOrderId, CancellationToken.None);
+
+        var stored = result.Single();
+        stored.EmployeeId.ShouldBeNull();
+        stored.IsCustomerAction.ShouldBeTrue();
+        stored.ToStatus.ShouldBe(ServiceOrderStatus.IN_EXECUTION);
+    }
+
     private AppDbContext CreateContext() =>
         new(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(_databaseName).Options);
 
