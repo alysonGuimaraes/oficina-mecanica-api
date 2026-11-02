@@ -43,11 +43,27 @@ public class ServiceOrderRepositoryGetAllTests
 
         result.Count.ShouldBe(3);
         var expectedIds = result
-            .OrderBy(o => o.CreatedAt)
+            .OrderBy(o => o.Status)
+            .ThenBy(o => o.CreatedAt)
             .ThenBy(o => o.Id)
             .Select(o => o.Id)
             .ToList();
         result.Select(o => o.Id).ToList().ShouldBe(expectedIds);
+    }
+
+    [Fact]
+    public async Task GetAll_NullStatus_ShouldOrderByStatusBeforeCreationDate()
+    {
+        var olderInDiagnosis = ServiceOrder.Create(Guid.NewGuid(), Guid.NewGuid());
+        olderInDiagnosis.ChangeStatus(ServiceOrderStatus.IN_DIAGNOSIS, Guid.NewGuid());
+        await SaveAsync(olderInDiagnosis);
+        var newerReceived = ServiceOrder.Create(Guid.NewGuid(), Guid.NewGuid());
+        await SaveAsync(newerReceived);
+
+        await using var query = CreateContext();
+        var result = await new ServiceOrderRepository(query).GetAll(null, CancellationToken.None);
+
+        result.Select(o => o.Id).ToList().ShouldBe(new[] { newerReceived.Id, olderInDiagnosis.Id }.ToList());
     }
 
     private AppDbContext CreateContext() =>

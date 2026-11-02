@@ -19,7 +19,8 @@ public class FakeServiceOrderRepository : IServiceOrderReadOnlyRepository, IServ
     {
         IReadOnlyList<ServiceOrder> result = _orders
             .Where(o => status == null || o.Status == status)
-            .OrderBy(o => o.CreatedAt)
+            .OrderBy(o => o.Status)
+            .ThenBy(o => o.CreatedAt)
             .ThenBy(o => o.Id)
             .ToList();
 
@@ -30,7 +31,8 @@ public class FakeServiceOrderRepository : IServiceOrderReadOnlyRepository, IServ
     {
         IReadOnlyList<ServiceOrder> result = _orders
             .Where(o => o.CustomerId == customerId && o.Status != excludedStatus)
-            .OrderBy(o => o.CreatedAt)
+            .OrderBy(o => o.Status)
+            .ThenBy(o => o.CreatedAt)
             .ThenBy(o => o.Id)
             .ToList();
 

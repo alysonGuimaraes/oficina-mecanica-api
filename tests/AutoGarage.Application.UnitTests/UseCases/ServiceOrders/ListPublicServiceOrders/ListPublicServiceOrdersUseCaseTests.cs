@@ -32,7 +32,8 @@ public class ListPublicServiceOrdersUseCaseTests
 
         result.Count.ShouldBe(2);
         var expectedIds = new[] { received, cancelled }
-            .OrderBy(o => o.CreatedAt)
+            .OrderBy(o => o.Status)
+            .ThenBy(o => o.CreatedAt)
             .ThenBy(o => o.Id)
             .Select(o => o.Id)
             .ToList();
