@@ -6,9 +6,6 @@ namespace AutoGarage.Api.Exceptions;
 
 public class ExceptionHandler : IExceptionHandler
 {
-    // TODO: Refactor to not use hardcoded url
-    private const string BaseErrorTypeUrl = "https://api.autogarage.com/errors/";
-
     private readonly IProblemDetailsService _problemDetailsService;
 
     public ExceptionHandler(IProblemDetailsService problemDetailsService)
@@ -52,7 +49,7 @@ public class ExceptionHandler : IExceptionHandler
 
         return new ErrorResponse
         {
-            Type = $"{BaseErrorTypeUrl}{domainException.ErrorType}",
+            Type = BuildErrorTypeUrl(httpContext, domainException.ErrorType),
             Title = domainException.ErrorType,
             Status = statusCode,
             Detail = domainException.Message,
@@ -63,6 +60,10 @@ public class ExceptionHandler : IExceptionHandler
             }
         };
     }
+
+    // O tipo do erro usa o scheme e o host da requisição, para apontar para a instância que atendeu.
+    private static string BuildErrorTypeUrl(HttpContext httpContext, string errorType) =>
+        $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/scalar#{errorType}";
 
     private static int ResolveDomainErrorStatusCode(DomainException domainException) => domainException switch
     {
@@ -81,7 +82,7 @@ public class ExceptionHandler : IExceptionHandler
 
         return new ErrorResponse
         {
-            Type = $"{BaseErrorTypeUrl}validation-error",
+            Type = BuildErrorTypeUrl(httpContext, "validation-error"),
             Title = "Validation Error",
             Status = statusCode,
             Detail = "One or more fields are invalid.",
@@ -99,7 +100,7 @@ public class ExceptionHandler : IExceptionHandler
 
         return new ErrorResponse
         {
-            Type = $"{BaseErrorTypeUrl}server-error",
+            Type = BuildErrorTypeUrl(httpContext, "server-error"),
             Title = "Internal Server Error",
             Status = statusCode,
             Detail = "An unexpected error occurred while processing your request.",

@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\AutoGarage.Infrastructure\AutoGarage.Infrastructure.csproj" />
     <ProjectReference Include="..\AutoGarage.CommonTestUtilities\AutoGarage.CommonTestUtilities.csproj" />
+    <ProjectReference Include="..\..\src\AutoGarage.Api\AutoGarage.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
