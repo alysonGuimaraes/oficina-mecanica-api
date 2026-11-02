@@ -1,7 +1,7 @@
 # Relatório de vulnerabilidades
 
-- Gerado em: 2026-11-02 12:47 UTC
-- Commit analisado: `8746265beba4c8d1f6fa779bcde73d3fc0113aa2`
+- Gerado em: 2026-11-02 14:45 UTC
+- Commit analisado: `c0de6f29417dac8cdf3d7fffd8f9511cc36f667d`
 
 Arquivo gerado automaticamente pelo workflow `security-report.yml` a cada push na `main`. Não edite manualmente.
 
