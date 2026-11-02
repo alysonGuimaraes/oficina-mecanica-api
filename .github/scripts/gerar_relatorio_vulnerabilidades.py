@@ -12,6 +12,7 @@ Uso:
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime, timezone
 
@@ -166,8 +167,26 @@ def render(nuget_rows, image_rows, config_rows, commit, generated_at):
     return "\n".join(lines)
 
 
+def workspace_path(path):
+    """Resolve o caminho e recusa qualquer um que saia do diretório de trabalho.
+
+    O gerador só lê e grava arquivos do próprio repositório. Caminhos com ".." ou absolutos
+    fora dele são rejeitados.
+    """
+    base = os.path.realpath(os.getcwd())
+    resolved = os.path.realpath(path)
+    try:
+        inside = os.path.commonpath([base, resolved]) == base
+    except ValueError:
+        # Unidades diferentes no Windows: o caminho não pode estar dentro do diretório de trabalho.
+        inside = False
+    if not inside:
+        raise SystemExit(f"Caminho fora do diretório de trabalho recusado: {path}")
+    return resolved
+
+
 def load(path):
-    with open(path, encoding="utf-8") as file:
+    with open(workspace_path(path), encoding="utf-8") as file:
         return json.load(file)
 
 
@@ -188,7 +207,7 @@ def main():
         datetime.now(timezone.utc),
     )
 
-    with open(args.saida, "w", encoding="utf-8", newline="\n") as file:
+    with open(workspace_path(args.saida), "w", encoding="utf-8", newline="\n") as file:
         file.write(report)
 
     print(f"Relatório gravado em {args.saida}")
