@@ -1,0 +1,85 @@
+name: Security report
+
+# Regenerates the vulnerability report on every push to main and commits it to docs/seguranca.
+# Sources: NuGet audit (dotnet list), Trivy on the built image, and Trivy on configuration
+# (Dockerfile, Kubernetes manifests and Terraform). The report never fails the pipeline.
+# Pushes that only change the report do not start a new run (paths-ignore), and the bot commit
+# carries [skip ci], so the other workflows do not run for it either.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/seguranca/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: security-report
+  cancel-in-progress: false
+
+env:
+  SOLUTION: src/AutoGarage.slnx
+  REPORT: docs/seguranca/relatorio-vulnerabilidades.md
+  TRIVY_IMAGE: aquasec/trivy:0.76.1
+  APP_IMAGE: autogarage-api:scan
+
+jobs:
+  report:
+    name: Audit dependencies, image and configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore "$SOLUTION"
+
+      - name: Audit NuGet packages
+        run: dotnet list "$SOLUTION" package --vulnerable --include-transitive --format json > audit.json
+
+      - name: Build application image
+        run: docker build -t "$APP_IMAGE" .
+
+      - name: Save application image
+        run: docker save "$APP_IMAGE" -o image.tar
+
+      - name: Scan image with Trivy
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/work" -w /work "$TRIVY_IMAGE" \
+            image --input /work/image.tar --format json --output /work/trivy-image.json
+
+      - name: Scan configuration with Trivy
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/work" -w /work "$TRIVY_IMAGE" \
+            config --format json --output /work/trivy-config.json --skip-dirs /work/tests /work
+
+      - name: Write report
+        env:
+          COMMIT: ${{ github.sha }}
+        run: |
+          python3 .github/scripts/gerar_relatorio_vulnerabilidades.py \
+            --nuget audit.json \
+            --imagem trivy-image.json \
+            --config trivy-config.json \
+            --saida "$REPORT" \
+            --commit "$COMMIT"
+
+      - name: Commit report to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$REPORT"
+          if git diff --cached --quiet; then
+            echo "Report unchanged."
+            exit 0
+          fi
+          git commit -m "docs(security): update vulnerability report [skip ci]"
+          git push origin HEAD:refs/heads/main

@@ -123,3 +123,7 @@ dotnet test src/AutoGarage.slnx
 ```
 
 Para testar a API manualmente, com a collection do Postman, os logins de teste e os exemplos de chamadas, siga [docs/como-testar/README.md](docs/como-testar/README.md).
+
+## Segurança
+
+O relatório de vulnerabilidades fica em [docs/seguranca](docs/seguranca/README.md). Ele é gerado automaticamente pelo workflow `security-report.yml` a cada push na `main` e reúne três fontes: as dependências NuGet, a imagem Docker e a configuração (Dockerfile, Kubernetes e Terraform), estas duas últimas analisadas pelo Trivy. O relatório não bloqueia o pipeline; os achados precisam de avaliação.
