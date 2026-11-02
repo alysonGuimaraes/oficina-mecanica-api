@@ -18,7 +18,7 @@ public class FakeServiceOrderRepository : IServiceOrderReadOnlyRepository, IServ
     public Task<IReadOnlyList<ServiceOrder>> GetAll(ServiceOrderStatus? status, CancellationToken cancellationToken)
     {
         IReadOnlyList<ServiceOrder> result = _orders
-            .Where(o => status == null || o.Status == status)
+            .Where(o => o.Status != ServiceOrderStatus.DELIVERED && (status == null || o.Status == status))
             .OrderBy(o => o.Status)
             .ThenBy(o => o.CreatedAt)
             .ThenBy(o => o.Id)

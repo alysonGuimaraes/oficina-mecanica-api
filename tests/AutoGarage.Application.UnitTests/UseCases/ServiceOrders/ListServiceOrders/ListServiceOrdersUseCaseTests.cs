@@ -82,6 +82,19 @@ public class ListServiceOrdersUseCaseTests
         result.ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task Handle_NoStatus_ShouldExcludeDeliveredOrders()
+    {
+        var sut = CreateSut(
+            CreateOrder(ServiceOrderStatus.RECEIVED),
+            CreateOrder(ServiceOrderStatus.DELIVERED));
+
+        var result = await sut.UseCase.Handle(null, CancellationToken.None);
+
+        result.Count.ShouldBe(1);
+        result[0].Status.ShouldBe(ServiceOrderStatus.RECEIVED);
+    }
+
     private static ServiceOrder CreateOrder(ServiceOrderStatus status)
     {
         var order = ServiceOrder.Create(Guid.NewGuid(), Guid.NewGuid());
@@ -89,6 +102,12 @@ public class ListServiceOrdersUseCaseTests
         if (status == ServiceOrderStatus.IN_DIAGNOSIS)
         {
             order.ChangeStatus(ServiceOrderStatus.IN_DIAGNOSIS, Guid.NewGuid());
+        }
+
+        if (status == ServiceOrderStatus.DELIVERED)
+        {
+            order.Cancel("motivo", Guid.NewGuid());
+            order.ChangeStatus(ServiceOrderStatus.DELIVERED, Guid.NewGuid());
         }
 
         return order;

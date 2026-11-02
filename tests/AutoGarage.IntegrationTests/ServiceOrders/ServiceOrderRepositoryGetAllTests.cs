@@ -66,6 +66,41 @@ public class ServiceOrderRepositoryGetAllTests
         result.Select(o => o.Id).ToList().ShouldBe(new[] { newerReceived.Id, olderInDiagnosis.Id }.ToList());
     }
 
+    [Fact]
+    public async Task GetAll_NullStatus_ShouldExcludeDeliveredButKeepCancelled()
+    {
+        var employeeId = Guid.NewGuid();
+        var received = ServiceOrder.Create(Guid.NewGuid(), Guid.NewGuid());
+        await SaveAsync(received);
+        var cancelled = ServiceOrder.Create(Guid.NewGuid(), Guid.NewGuid());
+        cancelled.Cancel("motivo", employeeId);
+        await SaveAsync(cancelled);
+        var delivered = ServiceOrder.Create(Guid.NewGuid(), Guid.NewGuid());
+        delivered.Cancel("motivo", employeeId);
+        delivered.ChangeStatus(ServiceOrderStatus.DELIVERED, employeeId);
+        await SaveAsync(delivered);
+
+        await using var query = CreateContext();
+        var result = await new ServiceOrderRepository(query).GetAll(null, CancellationToken.None);
+
+        result.Select(o => o.Id).ToList().ShouldBe(new[] { received.Id, cancelled.Id }.ToList());
+    }
+
+    [Fact]
+    public async Task GetAll_DeliveredFilter_ShouldReturnEmpty()
+    {
+        var employeeId = Guid.NewGuid();
+        var delivered = ServiceOrder.Create(Guid.NewGuid(), Guid.NewGuid());
+        delivered.Cancel("motivo", employeeId);
+        delivered.ChangeStatus(ServiceOrderStatus.DELIVERED, employeeId);
+        await SaveAsync(delivered);
+
+        await using var query = CreateContext();
+        var result = await new ServiceOrderRepository(query).GetAll(ServiceOrderStatus.DELIVERED, CancellationToken.None);
+
+        result.ShouldBeEmpty();
+    }
+
     private AppDbContext CreateContext() =>
         new(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(_databaseName).Options);
 
