@@ -1,6 +1,7 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.Services.ServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.SendServiceOrderBudget;
+using AutoGarage.CommonTestUtilities.Notifications;
 using AutoGarage.CommonTestUtilities.Entities;
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.CommonTestUtilities.Repositories;
@@ -41,6 +42,8 @@ public class SendServiceOrderBudgetUseCaseTests
         history.EmployeeId.ShouldBe(employee.Id);
 
         sut.UnitWork.CommitCount.ShouldBe(1);
+
+        sut.Notifier.Notified.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -108,6 +111,7 @@ public class SendServiceOrderBudgetUseCaseTests
         sut.Orders.Orders[0].BudgetTotal.ShouldBe(before);
         sut.Histories.Histories.ShouldBeEmpty();
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -140,6 +144,7 @@ public class SendServiceOrderBudgetUseCaseTests
         exception.ErrorType.ShouldBe("service-order-budget-inactive-service");
         sut.Orders.Orders[0].Status.ShouldBe(ServiceOrderStatus.IN_DIAGNOSIS);
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -172,6 +177,7 @@ public class SendServiceOrderBudgetUseCaseTests
         exception.ErrorType.ShouldBe("service-order-budget-without-items");
         sut.Orders.Orders[0].Status.ShouldBe(ServiceOrderStatus.IN_DIAGNOSIS);
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -202,6 +208,7 @@ public class SendServiceOrderBudgetUseCaseTests
         exception.ErrorType.ShouldBe("service-order-budget-without-items");
         sut.Orders.Orders[0].Status.ShouldBe(ServiceOrderStatus.IN_DIAGNOSIS);
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -257,6 +264,8 @@ public class SendServiceOrderBudgetUseCaseTests
             () => sut.UseCase.Handle(command, CancellationToken.None));
 
         sut.UnitWork.CommitCount.ShouldBe(0);
+
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     private static ServiceOrderService ActiveService(ServiceOrder order) =>
@@ -307,17 +316,19 @@ public class SendServiceOrderBudgetUseCaseTests
 
         var historyRepository = new FakeServiceOrderStatusHistoryRepository();
         var unitWork = new FakeUnitWork();
+        var notifier = new FakeServiceOrderStatusNotifier();
         var lookup = new ServiceOrderLookup(orderRepository, employeeRepository);
 
         var useCase = new SendServiceOrderBudgetUseCase(
-            lookup, catalogRepository, serviceRepository, materialRepository, orderRepository, historyRepository, unitWork, MapperBuilder.Build());
+            lookup, catalogRepository, serviceRepository, materialRepository, orderRepository, historyRepository, unitWork, notifier, MapperBuilder.Build());
 
-        return new SendServiceOrderBudgetUseCaseSut(useCase, orderRepository, historyRepository, unitWork);
+        return new SendServiceOrderBudgetUseCaseSut(useCase, orderRepository, historyRepository, unitWork, notifier);
     }
 
     private sealed record SendServiceOrderBudgetUseCaseSut(
         SendServiceOrderBudgetUseCase UseCase,
         FakeServiceOrderRepository Orders,
         FakeServiceOrderStatusHistoryRepository Histories,
-        FakeUnitWork UnitWork);
+        FakeUnitWork UnitWork,
+        FakeServiceOrderStatusNotifier Notifier);
 }

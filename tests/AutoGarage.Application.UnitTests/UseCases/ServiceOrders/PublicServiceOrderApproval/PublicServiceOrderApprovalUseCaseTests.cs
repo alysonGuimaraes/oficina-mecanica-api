@@ -1,6 +1,7 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.Services.ServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.PublicServiceOrderApproval;
+using AutoGarage.CommonTestUtilities.Notifications;
 using AutoGarage.CommonTestUtilities.Repositories;
 using AutoGarage.CommonTestUtilities.Repositories.Employees;
 using AutoGarage.CommonTestUtilities.Repositories.Materials;
@@ -37,6 +38,7 @@ public class PublicServiceOrderApprovalUseCaseTests
         history.EmployeeId.ShouldBeNull();
         history.IsCustomerAction.ShouldBeTrue();
         sut.UnitWork.CommitCount.ShouldBe(1);
+        sut.Notifier.Notified.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -53,6 +55,7 @@ public class PublicServiceOrderApprovalUseCaseTests
         material.StockQuantity.ShouldBe(1);
         sut.Transactions.Transactions.ShouldBeEmpty();
         sut.UnitWork.CommitCount.ShouldBe(1);
+        sut.Notifier.Notified.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -83,6 +86,7 @@ public class PublicServiceOrderApprovalUseCaseTests
         stored.Status.ShouldBe(ServiceOrderStatus.CANCELLED);
         stored.CancellationReason.ShouldBe("Approval deadline expired.");
         sut.UnitWork.CommitCount.ShouldBe(1);
+        sut.Notifier.Notified.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -96,6 +100,7 @@ public class PublicServiceOrderApprovalUseCaseTests
 
         sut.Orders.Orders.Single().Status.ShouldBe(ServiceOrderStatus.CANCELLED);
         sut.UnitWork.CommitCount.ShouldBe(1);
+        sut.Notifier.Notified.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -108,6 +113,8 @@ public class PublicServiceOrderApprovalUseCaseTests
             () => sut.UseCase.Handle(Approve(order, true), CancellationToken.None));
 
         sut.UnitWork.CommitCount.ShouldBe(0);
+
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -165,6 +172,19 @@ public class PublicServiceOrderApprovalUseCaseTests
         return material;
     }
 
+    [Fact]
+    public async Task Handle_ExpiredApproval_ShouldNotifyCancellation()
+    {
+        var order = AwaitingApproval();
+        var sut = CreateSut(order, [], [], nowAfterBudgetDays: 11);
+
+        await Should.ThrowAsync<ServiceOrderApprovalExpiredException>(
+            () => sut.UseCase.Handle(Approve(order, true), CancellationToken.None));
+
+        sut.Notifier.Notified.Count.ShouldBe(1);
+        sut.Notifier.Notified[0].History.ToStatus.ShouldBe(ServiceOrderStatus.CANCELLED);
+    }
+
     private static ServiceOrderMaterial Row(ServiceOrder order, Material material, int quantity) =>
         ServiceOrderMaterial.Create(order.Id, material.Id, quantity, material.Price);
 
@@ -191,6 +211,7 @@ public class PublicServiceOrderApprovalUseCaseTests
         var transactionRepository = new FakeMaterialTransactionRepository();
         var historyRepository = new FakeServiceOrderStatusHistoryRepository();
         var unitWork = new FakeUnitWork();
+        var notifier = new FakeServiceOrderStatusNotifier();
 
         // "Agora" = BudgetSentAt + N dias, para testar o prazo sem esperar.
         var sentAt = order?.BudgetSentAt ?? DateTime.UtcNow;
@@ -204,11 +225,11 @@ public class PublicServiceOrderApprovalUseCaseTests
             stockDebit,
             orderRepository,
             historyRepository,
-            unitWork,
+            unitWork, notifier,
             new ServiceOrderApprovalSettings(DeadlineDays),
             timeProvider);
 
-        return new ApprovalSut(useCase, orderRepository, historyRepository, transactionRepository, unitWork);
+        return new ApprovalSut(useCase, orderRepository, historyRepository, transactionRepository, unitWork, notifier);
     }
 
     private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
@@ -221,5 +242,6 @@ public class PublicServiceOrderApprovalUseCaseTests
         FakeServiceOrderRepository Orders,
         FakeServiceOrderStatusHistoryRepository Histories,
         FakeMaterialTransactionRepository Transactions,
-        FakeUnitWork UnitWork);
+        FakeUnitWork UnitWork,
+        FakeServiceOrderStatusNotifier Notifier);
 }

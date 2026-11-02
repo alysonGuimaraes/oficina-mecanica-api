@@ -1,6 +1,7 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.Services.ServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.DiagnoseServiceOrder;
+using AutoGarage.CommonTestUtilities.Notifications;
 using AutoGarage.CommonTestUtilities.Entities;
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.CommonTestUtilities.Repositories;
@@ -35,6 +36,8 @@ public class DiagnoseServiceOrderUseCaseTests
         history.EmployeeId.ShouldBe(employee.Id);
 
         sut.UnitWork.CommitCount.ShouldBe(1);
+
+        sut.Notifier.Notified.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -71,6 +74,7 @@ public class DiagnoseServiceOrderUseCaseTests
         sut.Orders.Orders[0].Status.ShouldBe(status);
         sut.Histories.Histories.ShouldBeEmpty();
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -86,6 +90,7 @@ public class DiagnoseServiceOrderUseCaseTests
 
         sut.Orders.Orders[0].Status.ShouldBe(ServiceOrderStatus.RECEIVED);
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -134,6 +139,8 @@ public class DiagnoseServiceOrderUseCaseTests
             () => sut.UseCase.Handle(command, CancellationToken.None));
 
         sut.UnitWork.CommitCount.ShouldBe(0);
+
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     private static ServiceOrderEmployeeCommand ValidCommand(ServiceOrder order, Employee employee) =>
@@ -155,16 +162,18 @@ public class DiagnoseServiceOrderUseCaseTests
 
         var historyRepository = new FakeServiceOrderStatusHistoryRepository();
         var unitWork = new FakeUnitWork();
+        var notifier = new FakeServiceOrderStatusNotifier();
         var lookup = new ServiceOrderLookup(orderRepository, employeeRepository);
 
-        var useCase = new DiagnoseServiceOrderUseCase(lookup, orderRepository, historyRepository, unitWork, MapperBuilder.Build());
+        var useCase = new DiagnoseServiceOrderUseCase(lookup, orderRepository, historyRepository, unitWork, notifier, MapperBuilder.Build());
 
-        return new DiagnoseServiceOrderUseCaseSut(useCase, orderRepository, historyRepository, unitWork);
+        return new DiagnoseServiceOrderUseCaseSut(useCase, orderRepository, historyRepository, unitWork, notifier);
     }
 
     private sealed record DiagnoseServiceOrderUseCaseSut(
         DiagnoseServiceOrderUseCase UseCase,
         FakeServiceOrderRepository Orders,
         FakeServiceOrderStatusHistoryRepository Histories,
-        FakeUnitWork UnitWork);
+        FakeUnitWork UnitWork,
+        FakeServiceOrderStatusNotifier Notifier);
 }

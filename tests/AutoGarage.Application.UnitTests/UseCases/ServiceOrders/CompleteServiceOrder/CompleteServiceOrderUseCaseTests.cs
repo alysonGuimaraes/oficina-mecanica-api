@@ -1,6 +1,7 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.Services.ServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.CompleteServiceOrder;
+using AutoGarage.CommonTestUtilities.Notifications;
 using AutoGarage.CommonTestUtilities.Entities;
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.CommonTestUtilities.Repositories;
@@ -39,6 +40,8 @@ public class CompleteServiceOrderUseCaseTests
         history.EmployeeId.ShouldBe(employee.Id);
 
         sut.UnitWork.CommitCount.ShouldBe(1);
+
+        sut.Notifier.Notified.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -115,6 +118,7 @@ public class CompleteServiceOrderUseCaseTests
         sut.Orders.Orders[0].Observation.ShouldBe(observationBefore);
         sut.Histories.Histories.ShouldBeEmpty();
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -184,6 +188,8 @@ public class CompleteServiceOrderUseCaseTests
             () => sut.UseCase.Handle(command, CancellationToken.None));
 
         sut.UnitWork.CommitCount.ShouldBe(0);
+
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     private static CompleteServiceOrderUseCaseSut CreateSut(ServiceOrder[]? orders = null, Employee[]? employees = null)
@@ -202,16 +208,18 @@ public class CompleteServiceOrderUseCaseTests
 
         var historyRepository = new FakeServiceOrderStatusHistoryRepository();
         var unitWork = new FakeUnitWork();
+        var notifier = new FakeServiceOrderStatusNotifier();
         var lookup = new ServiceOrderLookup(orderRepository, employeeRepository);
 
-        var useCase = new CompleteServiceOrderUseCase(lookup, orderRepository, historyRepository, unitWork, MapperBuilder.Build());
+        var useCase = new CompleteServiceOrderUseCase(lookup, orderRepository, historyRepository, unitWork, notifier, MapperBuilder.Build());
 
-        return new CompleteServiceOrderUseCaseSut(useCase, orderRepository, historyRepository, unitWork);
+        return new CompleteServiceOrderUseCaseSut(useCase, orderRepository, historyRepository, unitWork, notifier);
     }
 
     private sealed record CompleteServiceOrderUseCaseSut(
         CompleteServiceOrderUseCase UseCase,
         FakeServiceOrderRepository Orders,
         FakeServiceOrderStatusHistoryRepository Histories,
-        FakeUnitWork UnitWork);
+        FakeUnitWork UnitWork,
+        FakeServiceOrderStatusNotifier Notifier);
 }
