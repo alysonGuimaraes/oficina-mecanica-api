@@ -24,13 +24,10 @@ O workflow não falha por causa dos achados. Eles precisam ser avaliados por um 
 
 ## Não edite o relatório
 
-O arquivo é sobrescrito a cada execução do workflow. Para gerar uma cópia local:
+O arquivo é sobrescrito a cada execução do workflow. O gerador lê e grava sempre nos mesmos caminhos, na raiz do repositório, e recebe apenas o SHA analisado. Para gerar uma cópia local, rode os três comandos na raiz do repositório. Depois, restaure o relatório oficial com `git checkout -- docs/seguranca/relatorio-vulnerabilidades.md`.
 
 ```bash
 dotnet list src/AutoGarage.slnx package --vulnerable --include-transitive --format json > audit.json
-python .github/scripts/gerar_relatorio_vulnerabilidades.py \
-  --nuget audit.json --imagem trivy-image.json --config trivy-config.json \
-  --saida relatorio-local.md --commit "$(git rev-parse HEAD)"
+# Trivy sobre a imagem e sobre a configuração: ver o workflow para os comandos exatos.
+python .github/scripts/gerar_relatorio_vulnerabilidades.py --commit "$(git rev-parse HEAD)"
 ```
-
-Os arquivos `trivy-image.json` e `trivy-config.json` vêm dos comandos `trivy image` e `trivy config` com formato JSON. O workflow mostra os comandos exatos.

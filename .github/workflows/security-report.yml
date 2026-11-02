@@ -64,13 +64,7 @@ jobs:
       - name: Write report
         env:
           COMMIT: ${{ github.sha }}
-        run: |
-          python3 .github/scripts/gerar_relatorio_vulnerabilidades.py \
-            --nuget audit.json \
-            --imagem trivy-image.json \
-            --config trivy-config.json \
-            --saida "$REPORT" \
-            --commit "$COMMIT"
+        run: python3 .github/scripts/gerar_relatorio_vulnerabilidades.py --commit "$COMMIT"
 
       - name: Commit report to main
         run: |
