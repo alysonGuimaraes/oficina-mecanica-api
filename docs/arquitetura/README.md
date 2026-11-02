@@ -100,7 +100,7 @@ graph TD
 - **Controllers**: Endpoints REST (`Controllers/Employees/EmployeesController.cs`)
 - **Exceptions**: `ExceptionHandler` global, que converte erros em Problem Details
 - **Configuration**: `Program.cs`, `appsettings.json`, serialização JSON (enums como texto)
-- **Swagger/OpenAPI**: Configuração da documentação
+- **OpenAPI e Scalar**: documentação da API. O OpenAPI (`/openapi/v1.json`) e a interface Scalar (`/scalar`) são mapeados só em Development.
 - **Health Checks**: Endpoint `/health`
 
 **Regras:**
@@ -144,7 +144,7 @@ Esta tabela lista o que está em uso. Pacotes referenciados mas ainda sem uso es
 
 | Camada | Tecnologias |
 |---|---|
-| **Api** | ASP.NET Core 10, Microsoft.AspNetCore.OpenApi, Health Checks. Referenciados, sem uso ainda: Swashbuckle.AspNetCore, Microsoft.AspNetCore.Authentication.JwtBearer |
+| **Api** | ASP.NET Core 10, Microsoft.AspNetCore.OpenApi, Scalar.AspNetCore (interface da documentação, só em Development), Microsoft.AspNetCore.Authentication.JwtBearer, Health Checks |
 | **Application** | FluentValidation, Mapster |
 | **Infrastructure** | Entity Framework Core 10, Npgsql.EntityFrameworkCore.PostgreSQL, FluentMigrator, Dapper (criação do banco na inicialização). Referenciado, sem uso ainda: Microsoft.AspNetCore.Identity |
 | **Domain** | Puro C# (sem dependências externas) |

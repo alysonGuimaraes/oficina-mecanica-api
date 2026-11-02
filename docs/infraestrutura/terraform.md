@@ -68,7 +68,7 @@ Para remover tudo, primeiro confirme que `delete_protection` é `false` e depois
 | `google_compute_network.main_vpc` (`autogarage-vpc`) | Rede isolada para o cluster e o banco. Sem sub-redes automáticas, para controlar os intervalos de IP. |
 | `google_compute_subnetwork.public_subnet` (`10.0.1.0/24`) | Reservada para componentes voltados à internet. Hoje nenhum recurso a usa diretamente. |
 | `google_compute_subnetwork.private_subnet` (`10.0.2.0/24`) | Sub-rede do cluster. Com `private_ip_google_access`, os nós acessam APIs do Google sem IP público. |
-| `google_compute_router.nat_router` e `google_compute_router_nat.nat` | Saída para a internet dos nós privados, que precisam baixar imagens e falar com APIs externas, sem expor IP público. |
+| `google_compute_router.nat_router` e `google_compute_router_nat.nat` | Saída para a internet dos nós privados, que precisam baixar imagens, falar com APIs externas (ex.: envio de e-mails pela API do Brevo) e sem expor IP público. O NAT usa `AUTO_ONLY`, então o IP de saída pode mudar. Se a chave de API do Brevo for restrita a IPs autorizados, reserve um IP estático para o NAT antes de aplicar essa restrição. |
 
 ### Registro de imagens
 

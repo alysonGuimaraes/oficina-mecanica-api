@@ -20,7 +20,7 @@ Todas as respostas de erro devem seguir o padrão **Problem Details**:
 
 ```json
 {
-  "type": "https://api.autogarage.com/errors/duplicate-email",
+  "type": "http://localhost:7169/scalar#duplicate-email",
   "title": "duplicate-email",
   "status": 409,
   "detail": "The email 'john@autogarage.com' is already registered in the system.",
@@ -31,7 +31,7 @@ Todas as respostas de erro devem seguir o padrão **Problem Details**:
 
 | Campo | Obrigatório | Descrição |
 |---|---|---|
-| `type` | Sim | URI do tipo do problema: base `https://api.autogarage.com/errors/` + `ErrorType` da exceção. |
+| `type` | Sim | URI do tipo do problema: o esquema e o host da requisição, seguidos de `/scalar#` e do `ErrorType` da exceção (ex.: `https://api.exemplo.com/scalar#duplicate-email`). Aponta para a página do Scalar, que o ambiente de desenvolvimento expõe. |
 | `title` | Sim | Para exceções de domínio, o próprio `ErrorType`. Para validação e erros inesperados, um título fixo em inglês. |
 | `status` | Sim | Código HTTP retornado. Deve ser o mesmo do response. |
 | `detail` | Sim | Mensagem da exceção (domínio) ou texto genérico (erro inesperado). |

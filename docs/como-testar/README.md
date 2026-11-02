@@ -140,11 +140,19 @@ docker compose exec db psql -U postgres -d autogarage
 
 Como o banco começa vazio a cada subida, não existe nenhum ID pronto para usar. Crie os dados na ordem em que dependem uns dos outros: funcionário e cliente antes de veículo, veículo e serviço antes da ordem de serviço. O corpo de cada requisição está na própria collection.
 
+## Explorar a API pelo Scalar
+
+Como alternativa ao Postman, a documentação interativa da API fica em `http://localhost:7169/scalar`. Ela lê o documento OpenAPI em `http://localhost:7169/openapi/v1.json` e lista todos os endpoints com os corpos de requisição.
+
+- A interface só existe no ambiente de desenvolvimento, que é o que o `docker-compose.yml` sobe. Em produção ela não é mapeada.
+- As rotas que exigem autenticação pedem um token. Faça o login pelo próprio Scalar, copie o valor de `token` e informe-o como Bearer no botão de autorização.
+- Os IDs são os mesmos da seção de dados de teste. Use as listagens para descobri-los.
+
 ## Fluxo de ordem de serviço
 
 Os endpoints de ordem de serviço seguem a máquina de estados da aplicação. Uma ordem vai de `RECEIVED` para `IN_DIAGNOSIS` (requisição **Move to diagnosis**), depois para `AWAITING_APPROVAL` (**Move to await approval**), e daí para o fim do fluxo. Os endpoints devolvem `409` quando a transição não é permitida no estado atual, então um `409` costuma indicar uma ordem em outro estado, não um erro da API.
 
-A aprovação pública do orçamento tem regras próprias: prazo de 10 dias contado a partir de `BudgetSentAt`, baixa de estoque na aprovação e estados `AWAITING_MATERIALS` ou `FINISHED` conforme o caso. Os estados e o prazo estão em `docs/arquitetura/modelo-de-dados.md`.
+A aprovação pública do orçamento tem regras próprias: prazo de 10 dias contado a partir de `BudgetSentAt`, baixa de estoque na aprovação e estados conforme o caso: `IN_EXECUTION` (aprovação com estoque suficiente), `AWAITING_MATERIALS` (aprovação sem estoque), `FINISHED` (recusa) ou `CANCELLED` (prazo vencido). Os estados e o prazo estão em `docs/arquitetura/modelo-de-dados.md`.
 
 ## Health check
 
@@ -157,3 +165,9 @@ docker compose down
 ```
 
 Isso para e remove os containers. O banco de testes some junto, sem precisar de limpeza manual.
+
+## Ordem e filtros das listagens
+
+- `GET /api/service-orders` (interna): traz todas as ordens de serviço, exceto as `DELIVERED`. A ordem segue a sequência do enum de status (`RECEIVED`, `IN_DIAGNOSIS`, `AWAITING_APPROVAL`, `AWAITING_MATERIALS`, `IN_EXECUTION`, `FINISHED`, `CANCELLED`) e, dentro de cada status, as mais antigas primeiro (data de criação e depois `Id`).
+- `?status=` filtra pelo status. Com `?status=DELIVERED` a lista volta vazia, porque as entregues ficam fora da listagem. A ordem continua acessível por `GET /api/service-orders/{id}`.
+- `GET /public/service-orders?document=`: mesma ordem, restrita ao cliente identificado pelo CPF/CNPJ, também sem as `DELIVERED`.
