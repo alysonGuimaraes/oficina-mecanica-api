@@ -195,6 +195,7 @@ jobs:
           BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.BOOTSTRAP_ADMIN_PASSWORD }}
           JWT_EXPIRES_IN_MINUTES: ${{ vars.JWT_EXPIRES_IN_MINUTES }}
           GCP_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+          BREVO_ENABLED: ${{ vars.BREVO_ENABLED }}
           EMAIL_SENDER_API_KEY: ${{ secrets.EMAIL_SENDER_API_KEY }}
           EMAIL_SENDER_FROM_EMAIL: ${{ vars.EMAIL_SENDER_FROM_EMAIL }}
         run: |
@@ -211,8 +212,14 @@ jobs:
             echo "::error::The BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_PASSWORD secrets must be set (first employee, admin)."
             exit 1
           fi
-          if [ -z "$EMAIL_SENDER_API_KEY" ] || [ -z "$EMAIL_SENDER_FROM_EMAIL" ]; then
-            echo "::error::The EMAIL_SENDER_API_KEY secret and the EMAIL_SENDER_FROM_EMAIL variable must be set (Brevo sender)."
+          # BREVO_ENABLED vem da variável do GitHub. Sem valor, o padrão é false (nenhum e-mail sai).
+          BREVO_ENABLED_VALUE="${BREVO_ENABLED:-false}"
+          if [ "$BREVO_ENABLED_VALUE" != "true" ] && [ "$BREVO_ENABLED_VALUE" != "false" ]; then
+            echo "::error::The BREVO_ENABLED variable must be true or false."
+            exit 1
+          fi
+          if [ "$BREVO_ENABLED_VALUE" = "true" ] && { [ -z "$EMAIL_SENDER_API_KEY" ] || [ -z "$EMAIL_SENDER_FROM_EMAIL" ]; }; then
+            echo "::error::With BREVO_ENABLED=true, the EMAIL_SENDER_API_KEY secret and the EMAIL_SENDER_FROM_EMAIL variable must be set."
             exit 1
           fi
           if [ -z "$JWT_KEY" ]; then
@@ -230,7 +237,7 @@ jobs:
           {
             printf '%s\n' "$RUNTIME_CONFIG"
             echo "Settings__Jwt__ExpiresInMinutes=$JWT_EXPIRES_IN_MINUTES"
-            echo "Settings__Brevo__Enabled=true"
+            echo "Settings__Brevo__Enabled=$BREVO_ENABLED_VALUE"
             echo "Settings__Brevo__FromEmail=$EMAIL_SENDER_FROM_EMAIL"
             echo "Settings__Brevo__FromName=AutoGarage"
           } > "$OVERLAY/runtime-config.env"
