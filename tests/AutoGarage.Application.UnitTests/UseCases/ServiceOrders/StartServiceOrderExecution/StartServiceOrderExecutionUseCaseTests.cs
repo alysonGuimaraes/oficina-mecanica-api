@@ -1,6 +1,7 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.Services.ServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.StartServiceOrderExecution;
+using AutoGarage.CommonTestUtilities.Notifications;
 using AutoGarage.CommonTestUtilities.Entities;
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.CommonTestUtilities.Repositories;
@@ -44,6 +45,8 @@ public class StartServiceOrderExecutionUseCaseTests
         sut.Transactions.Transactions[0].ServiceOrderId.ShouldBe(order.Id);
 
         sut.UnitWork.CommitCount.ShouldBe(1);
+
+        sut.Notifier.Notified.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -80,6 +83,7 @@ public class StartServiceOrderExecutionUseCaseTests
         sut.Histories.Histories.ShouldBeEmpty();
         sut.Transactions.Transactions.ShouldBeEmpty();
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Theory]
@@ -105,6 +109,7 @@ public class StartServiceOrderExecutionUseCaseTests
         sut.Orders.Orders[0].Status.ShouldBe(status);
         sut.Histories.Histories.ShouldBeEmpty();
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -189,6 +194,8 @@ public class StartServiceOrderExecutionUseCaseTests
             () => sut.UseCase.Handle(command, CancellationToken.None));
 
         sut.UnitWork.CommitCount.ShouldBe(0);
+
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     private static Material StockedMaterial(int stock)
@@ -237,14 +244,15 @@ public class StartServiceOrderExecutionUseCaseTests
         var transactionRepository = new FakeMaterialTransactionRepository();
         var historyRepository = new FakeServiceOrderStatusHistoryRepository();
         var unitWork = new FakeUnitWork();
+        var notifier = new FakeServiceOrderStatusNotifier();
 
         var lookup = new ServiceOrderLookup(orderRepository, employeeRepository);
         var debit = new ServiceOrderStockDebit(rowRepository, materialRepository, materialRepository, transactionRepository);
 
         var useCase = new StartServiceOrderExecutionUseCase(
-            lookup, debit, orderRepository, historyRepository, unitWork, MapperBuilder.Build());
+            lookup, debit, orderRepository, historyRepository, unitWork, notifier, MapperBuilder.Build());
 
-        return new StartExecutionSut(useCase, orderRepository, historyRepository, transactionRepository, unitWork);
+        return new StartExecutionSut(useCase, orderRepository, historyRepository, transactionRepository, unitWork, notifier);
     }
 
     private sealed record StartExecutionSut(
@@ -252,5 +260,6 @@ public class StartServiceOrderExecutionUseCaseTests
         FakeServiceOrderRepository Orders,
         FakeServiceOrderStatusHistoryRepository Histories,
         FakeMaterialTransactionRepository Transactions,
-        FakeUnitWork UnitWork);
+        FakeUnitWork UnitWork,
+        FakeServiceOrderStatusNotifier Notifier);
 }

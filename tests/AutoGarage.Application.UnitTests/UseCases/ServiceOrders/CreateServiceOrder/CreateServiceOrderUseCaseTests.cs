@@ -1,5 +1,6 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.CreateServiceOrder;
+using AutoGarage.CommonTestUtilities.Notifications;
 using AutoGarage.CommonTestUtilities.Entities;
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.CommonTestUtilities.Repositories;
@@ -43,6 +44,8 @@ public class CreateServiceOrderUseCaseTests
         history.ServiceOrderId.ShouldBe(sut.Orders.Orders[0].Id);
 
         sut.UnitWork.CommitCount.ShouldBe(1);
+
+        sut.Notifier.Notified.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -242,6 +245,7 @@ public class CreateServiceOrderUseCaseTests
         sut.Orders.Orders.Count.ShouldBe(0);
         sut.Histories.Histories.Count.ShouldBe(0);
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     private static CreateServiceOrderCommand ValidCommand(Customer customer, Vehicle vehicle, Employee employee)
@@ -285,6 +289,7 @@ public class CreateServiceOrderUseCaseTests
         var orderRepository = new FakeServiceOrderRepository();
         var historyRepository = new FakeServiceOrderStatusHistoryRepository();
         var unitWork = new FakeUnitWork();
+        var notifier = new FakeServiceOrderStatusNotifier();
 
         var useCase = new CreateServiceOrderUseCase(
             customerRepository,
@@ -292,15 +297,16 @@ public class CreateServiceOrderUseCaseTests
             employeeRepository,
             orderRepository,
             historyRepository,
-            unitWork,
+            unitWork, notifier,
             MapperBuilder.Build());
 
-        return new CreateServiceOrderUseCaseSut(useCase, orderRepository, historyRepository, unitWork);
+        return new CreateServiceOrderUseCaseSut(useCase, orderRepository, historyRepository, unitWork, notifier);
     }
 
     private sealed record CreateServiceOrderUseCaseSut(
         CreateServiceOrderUseCase UseCase,
         FakeServiceOrderRepository Orders,
         FakeServiceOrderStatusHistoryRepository Histories,
-        FakeUnitWork UnitWork);
+        FakeUnitWork UnitWork,
+        FakeServiceOrderStatusNotifier Notifier);
 }

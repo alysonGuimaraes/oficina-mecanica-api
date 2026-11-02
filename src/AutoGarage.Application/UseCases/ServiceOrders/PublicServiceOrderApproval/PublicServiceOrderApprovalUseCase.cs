@@ -1,5 +1,6 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.Services.ServiceOrders;
+using AutoGarage.Application.Services.Notifications;
 using AutoGarage.Communication.Responses.ServiceOrders;
 using AutoGarage.Domain.Common.Exceptions;
 using AutoGarage.Domain.Enums.ServiceOrders;
@@ -21,6 +22,7 @@ public class PublicServiceOrderApprovalUseCase : IPublicServiceOrderApprovalUseC
     private readonly IServiceOrderWriteOnlyRepository _serviceOrderWriteOnlyRepository;
     private readonly IServiceOrderStatusHistoryWriteOnlyRepository _serviceOrderStatusHistoryWriteOnlyRepository;
     private readonly IUnitWork _workUnit;
+    private readonly IServiceOrderStatusNotifier _notifier;
     private readonly ServiceOrderApprovalSettings _settings;
     private readonly TimeProvider _timeProvider;
 
@@ -30,6 +32,7 @@ public class PublicServiceOrderApprovalUseCase : IPublicServiceOrderApprovalUseC
         IServiceOrderWriteOnlyRepository serviceOrderWriteOnlyRepository,
         IServiceOrderStatusHistoryWriteOnlyRepository serviceOrderStatusHistoryWriteOnlyRepository,
         IUnitWork workUnit,
+        IServiceOrderStatusNotifier notifier,
         ServiceOrderApprovalSettings settings,
         TimeProvider timeProvider)
     {
@@ -38,6 +41,7 @@ public class PublicServiceOrderApprovalUseCase : IPublicServiceOrderApprovalUseC
         _serviceOrderWriteOnlyRepository = serviceOrderWriteOnlyRepository;
         _serviceOrderStatusHistoryWriteOnlyRepository = serviceOrderStatusHistoryWriteOnlyRepository;
         _workUnit = workUnit;
+        _notifier = notifier;
         _settings = settings;
         _timeProvider = timeProvider;
     }
@@ -63,6 +67,7 @@ public class PublicServiceOrderApprovalUseCase : IPublicServiceOrderApprovalUseC
             await _serviceOrderWriteOnlyRepository.Update(order, cancellationToken);
             await _serviceOrderStatusHistoryWriteOnlyRepository.Add(cancelHistory, cancellationToken);
             await _workUnit.Commit();
+            await _notifier.NotifyAsync(order, cancelHistory, cancellationToken);
 
             throw new ServiceOrderApprovalExpiredException();
         }
@@ -74,6 +79,7 @@ public class PublicServiceOrderApprovalUseCase : IPublicServiceOrderApprovalUseC
             await _serviceOrderWriteOnlyRepository.Update(order, cancellationToken);
             await _serviceOrderStatusHistoryWriteOnlyRepository.Add(refuseHistory, cancellationToken);
             await _workUnit.Commit();
+            await _notifier.NotifyAsync(order, refuseHistory, cancellationToken);
 
             return new ServiceOrderApprovalResponse(RefusedMessage);
         }
@@ -92,6 +98,7 @@ public class PublicServiceOrderApprovalUseCase : IPublicServiceOrderApprovalUseC
         await _serviceOrderWriteOnlyRepository.Update(order, cancellationToken);
         await _serviceOrderStatusHistoryWriteOnlyRepository.Add(history, cancellationToken);
         await _workUnit.Commit();
+        await _notifier.NotifyAsync(order, history, cancellationToken);
 
         return new ServiceOrderApprovalResponse(ApprovedMessage);
     }

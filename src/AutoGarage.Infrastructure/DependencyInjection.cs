@@ -11,6 +11,8 @@ using AutoGarage.Domain.Repositories.ServiceOrders.ServiceOrderServices;
 using AutoGarage.Domain.Repositories.ServiceOrders.ServiceOrderMaterials;
 using AutoGarage.Domain.Repositories.ServiceOrders.ServiceOrderStatusHistories;
 using AutoGarage.Infrastructure.Authentication;
+using AutoGarage.Application.Services.Notifications;
+using AutoGarage.Infrastructure.Notifications;
 using AutoGarage.Infrastructure.Persistence;
 using AutoGarage.Infrastructure.Persistence.Repositories;
 using FluentMigrator.Runner;
@@ -27,6 +29,8 @@ public static class DependencyInjection
     {
 
         AddAuthentication(services, configuration);
+
+        AddNotifications(services, configuration);
 
         AddRepositories(services);
 
@@ -55,6 +59,33 @@ public static class DependencyInjection
         }
 
         services.AddSingleton<IAccessTokenGenerator>(new JwtAccessTokenGenerator(settings));
+    }
+
+    private static void AddNotifications(IServiceCollection services, IConfiguration configuration)
+    {
+        var section = configuration.GetSection("Settings:Brevo");
+
+        var settings = new BrevoSettings
+        {
+            ApiKey = section["ApiKey"] ?? string.Empty,
+            FromEmail = section["FromEmail"] ?? string.Empty,
+            FromName = section["FromName"] ?? string.Empty,
+            Enabled = bool.TryParse(section["Enabled"], out var enabled) && enabled
+        };
+
+        if (!settings.Enabled)
+        {
+            services.AddScoped<IEmailSender, LogOnlyEmailSender>();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.ApiKey) || string.IsNullOrWhiteSpace(settings.FromEmail))
+        {
+            throw new InvalidOperationException("Settings:Brevo:ApiKey and Settings:Brevo:FromEmail must be configured when Settings:Brevo:Enabled is true.");
+        }
+
+        services.AddSingleton(settings);
+        services.AddHttpClient<IEmailSender, BrevoEmailSender>(client => client.Timeout = TimeSpan.FromSeconds(5));
     }
 
     private static void AddDbContext(IServiceCollection services, IConfiguration configuration)

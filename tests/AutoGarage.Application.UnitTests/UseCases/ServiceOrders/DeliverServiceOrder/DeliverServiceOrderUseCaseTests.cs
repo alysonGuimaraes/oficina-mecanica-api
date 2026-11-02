@@ -1,6 +1,7 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.Services.ServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.DeliverServiceOrder;
+using AutoGarage.CommonTestUtilities.Notifications;
 using AutoGarage.CommonTestUtilities.Entities;
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.CommonTestUtilities.Repositories;
@@ -34,6 +35,8 @@ public class DeliverServiceOrderUseCaseTests
         history.EmployeeId.ShouldBe(employee.Id);
 
         sut.UnitWork.CommitCount.ShouldBe(1);
+
+        sut.Notifier.Notified.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -69,6 +72,7 @@ public class DeliverServiceOrderUseCaseTests
         sut.Orders.Orders[0].Status.ShouldBe(status);
         sut.Histories.Histories.ShouldBeEmpty();
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -84,6 +88,7 @@ public class DeliverServiceOrderUseCaseTests
 
         sut.Orders.Orders[0].Status.ShouldBe(ServiceOrderStatus.FINISHED);
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -116,16 +121,18 @@ public class DeliverServiceOrderUseCaseTests
 
         var historyRepository = new FakeServiceOrderStatusHistoryRepository();
         var unitWork = new FakeUnitWork();
+        var notifier = new FakeServiceOrderStatusNotifier();
         var lookup = new ServiceOrderLookup(orderRepository, employeeRepository);
 
-        var useCase = new DeliverServiceOrderUseCase(lookup, orderRepository, historyRepository, unitWork, MapperBuilder.Build());
+        var useCase = new DeliverServiceOrderUseCase(lookup, orderRepository, historyRepository, unitWork, notifier, MapperBuilder.Build());
 
-        return new DeliverServiceOrderUseCaseSut(useCase, orderRepository, historyRepository, unitWork);
+        return new DeliverServiceOrderUseCaseSut(useCase, orderRepository, historyRepository, unitWork, notifier);
     }
 
     private sealed record DeliverServiceOrderUseCaseSut(
         DeliverServiceOrderUseCase UseCase,
         FakeServiceOrderRepository Orders,
         FakeServiceOrderStatusHistoryRepository Histories,
-        FakeUnitWork UnitWork);
+        FakeUnitWork UnitWork,
+        FakeServiceOrderStatusNotifier Notifier);
 }

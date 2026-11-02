@@ -1,5 +1,6 @@
 using AutoGarage.Application.Services.Cryptography;
 using AutoGarage.Application.Services.ServiceOrders;
+using AutoGarage.Application.Services.Notifications;
 using AutoGarage.Application.Services.Normalization;
 using AutoGarage.Application.UseCases.Customers.CreateCustomer;
 using AutoGarage.Application.UseCases.Customers.GetCustomerByDocument;
@@ -131,6 +132,7 @@ public static class DependencyInjection
         services.AddScoped<ICancelServiceOrderUseCase, CancelServiceOrderUseCase>();
         services.AddScoped<IListPublicServiceOrdersUseCase, ListPublicServiceOrdersUseCase>();
         services.AddScoped<IPublicServiceOrderApprovalUseCase, PublicServiceOrderApprovalUseCase>();
+        services.AddScoped<IServiceOrderStatusNotifier, ServiceOrderStatusNotifier>();
     }
 
     private static void AddServiceOrderApproval(IServiceCollection services, IConfiguration configuration)

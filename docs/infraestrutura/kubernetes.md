@@ -59,8 +59,8 @@ A configuração é dividida em duas partes, pelo tipo de dado.
 
 | Objeto | Gerado por | Conteúdo |
 |---|---|---|
-| ConfigMap `autogarage-api-config` | `configMapGenerator` a partir de `runtime-config.env` e de `literals` | Dados não sensíveis: `ASPNETCORE_ENVIRONMENT=Production`, `ASPNETCORE_HTTP_PORTS=8080`, `Settings__Jwt__ExpiresInMinutes` e o conteúdo do secret `RUNTIME_CONFIG` |
-| Secret `autogarage-api-secrets` | `secretGenerator` a partir de `secret.env` | Dados sensíveis: `ConnectionStrings__DefaultConnection` (com a senha do banco), `Settings__Jwt__Key`, `Settings__Password__AdditionalKey`, `Settings__BootstrapAdmin__Email` e `Settings__BootstrapAdmin__Password` |
+| ConfigMap `autogarage-api-config` | `configMapGenerator` a partir de `runtime-config.env` e de `literals` | Dados não sensíveis: `ASPNETCORE_ENVIRONMENT=Production`, `ASPNETCORE_HTTP_PORTS=8080`, `Settings__Jwt__ExpiresInMinutes`, `Settings__Brevo__Enabled`, `Settings__Brevo__FromEmail`, `Settings__Brevo__FromName` e o conteúdo do secret `RUNTIME_CONFIG` |
+| Secret `autogarage-api-secrets` | `secretGenerator` a partir de `secret.env` | Dados sensíveis: `ConnectionStrings__DefaultConnection` (com a senha do banco), `Settings__Jwt__Key`, `Settings__Password__AdditionalKey`, `Settings__BootstrapAdmin__Email`, `Settings__BootstrapAdmin__Password` e `Settings__Brevo__ApiKey` |
 
 Os nomes dos dois objetos recebem um sufixo com hash do conteúdo (por exemplo, `autogarage-api-config-fh29m27762`). Isso acontece porque o kustomize atualiza a referência no Deployment. Quando um valor muda, o nome muda e o Deployment faz um rollout sozinho. Sem o hash, o pod continuaria com a configuração antiga.
 
@@ -91,6 +91,9 @@ cd k8s/overlays/production
 cat > runtime-config.env <<'EOF'
 ASPNETCORE_LOGGING__LOGLEVEL__DEFAULT=Information
 Settings__Jwt__ExpiresInMinutes=15
+Settings__Brevo__Enabled=true
+Settings__Brevo__FromEmail=<remetente-verificado>
+Settings__Brevo__FromName=AutoGarage
 EOF
 
 cat > secret.env <<'EOF'
@@ -99,6 +102,7 @@ Settings__Jwt__Key=<chave-com-32-bytes-ou-mais>
 Settings__Password__AdditionalKey=<pepper>
 Settings__BootstrapAdmin__Email=<email-do-admin>
 Settings__BootstrapAdmin__Password=<senha-do-admin>
+Settings__Brevo__ApiKey=<api-key-do-brevo>
 EOF
 
 # imagem a publicar (substitua pela tag desejada)

@@ -1,6 +1,7 @@
 using AutoGarage.Application.Commands.ServiceOrders;
 using AutoGarage.Application.Services.ServiceOrders;
 using AutoGarage.Application.UseCases.ServiceOrders.CancelServiceOrder;
+using AutoGarage.CommonTestUtilities.Notifications;
 using AutoGarage.CommonTestUtilities.Entities;
 using AutoGarage.CommonTestUtilities.Mapper;
 using AutoGarage.CommonTestUtilities.Repositories;
@@ -49,6 +50,8 @@ public class CancelServiceOrderUseCaseTests
         history.EmployeeId.ShouldBe(employee.Id);
 
         sut.UnitWork.CommitCount.ShouldBe(1);
+
+        sut.Notifier.Notified.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -106,6 +109,7 @@ public class CancelServiceOrderUseCaseTests
         sut.Transactions.Transactions.ShouldBeEmpty();
         sut.Histories.Histories.ShouldBeEmpty();
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -138,6 +142,7 @@ public class CancelServiceOrderUseCaseTests
         sut.Transactions.Transactions.ShouldBeEmpty();
         sut.Histories.Histories.ShouldBeEmpty();
         sut.UnitWork.CommitCount.ShouldBe(0);
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     [Fact]
@@ -193,6 +198,22 @@ public class CancelServiceOrderUseCaseTests
             () => sut.UseCase.Handle(command, CancellationToken.None));
 
         sut.UnitWork.CommitCount.ShouldBe(0);
+
+        sut.Notifier.Notified.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Handle_CommitFails_ShouldNotNotify()
+    {
+        var employee = EmployeeBuilder.Build("ana@autogarage.com");
+        var order = ServiceOrderBuilder.InStatus(ServiceOrderStatus.AWAITING_MATERIALS, employee.Id);
+        var sut = CreateSut(orders: [order], employees: [employee]);
+        sut.UnitWork.ThrowOnCommit = new InvalidOperationException("database unavailable");
+
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => sut.UseCase.Handle(new CancelServiceOrderCommand(order.Id.ToString(), "Cliente desistiu", employee.Id.ToString()), CancellationToken.None));
+
+        sut.Notifier.Notified.ShouldBeEmpty();
     }
 
     private static Material StockedMaterial(int stock)
@@ -238,14 +259,15 @@ public class CancelServiceOrderUseCaseTests
         var transactionRepository = new FakeMaterialTransactionRepository();
         var historyRepository = new FakeServiceOrderStatusHistoryRepository();
         var unitWork = new FakeUnitWork();
+        var notifier = new FakeServiceOrderStatusNotifier();
 
         var lookup = new ServiceOrderLookup(orderRepository, employeeRepository);
         var stockReturn = new ServiceOrderStockReturn(rowRepository, materialRepository, materialRepository, transactionRepository);
 
         var useCase = new CancelServiceOrderUseCase(
-            lookup, stockReturn, orderRepository, historyRepository, unitWork, MapperBuilder.Build());
+            lookup, stockReturn, orderRepository, historyRepository, unitWork, notifier, MapperBuilder.Build());
 
-        return new CancelServiceOrderUseCaseSut(useCase, orderRepository, historyRepository, transactionRepository, unitWork);
+        return new CancelServiceOrderUseCaseSut(useCase, orderRepository, historyRepository, transactionRepository, unitWork, notifier);
     }
 
     private sealed record CancelServiceOrderUseCaseSut(
@@ -253,5 +275,6 @@ public class CancelServiceOrderUseCaseTests
         FakeServiceOrderRepository Orders,
         FakeServiceOrderStatusHistoryRepository Histories,
         FakeMaterialTransactionRepository Transactions,
-        FakeUnitWork UnitWork);
+        FakeUnitWork UnitWork,
+        FakeServiceOrderStatusNotifier Notifier);
 }
