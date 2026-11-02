@@ -82,6 +82,25 @@ public class ServiceOrderRepositoryGetByCustomerTests
         result.Select(o => o.Id).ToList().ShouldBe(expectedIds);
     }
 
+    [Fact]
+    public async Task GetAllByCustomerExcludingStatus_ShouldOrderByStatusBeforeCreationDate()
+    {
+        var customer = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+
+        var olderCancelled = ServiceOrder.Create(customer, Guid.NewGuid());
+        olderCancelled.Cancel("motivo", employeeId);
+        await SaveAsync(olderCancelled);
+        var newerReceived = ServiceOrder.Create(customer, Guid.NewGuid());
+        await SaveAsync(newerReceived);
+
+        await using var query = CreateContext();
+        var result = await new ServiceOrderRepository(query)
+            .GetAllByCustomerExcludingStatus(customer, ServiceOrderStatus.DELIVERED, CancellationToken.None);
+
+        result.Select(o => o.Id).ToList().ShouldBe(new[] { newerReceived.Id, olderCancelled.Id }.ToList());
+    }
+
     private AppDbContext CreateContext() =>
         new(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(_databaseName).Options);
 

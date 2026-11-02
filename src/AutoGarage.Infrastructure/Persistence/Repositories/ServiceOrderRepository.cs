@@ -25,8 +25,9 @@ public class ServiceOrderRepository : IServiceOrderReadOnlyRepository, IServiceO
     {
         return await _context.ServiceOrders
             .AsNoTracking()
-            .Where(o => status == null || o.Status == status)
-            .OrderBy(o => o.CreatedAt)
+            .Where(o => o.Status != ServiceOrderStatus.DELIVERED && (status == null || o.Status == status))
+            .OrderBy(o => o.Status)
+            .ThenBy(o => o.CreatedAt)
             .ThenBy(o => o.Id)
             .ToListAsync(cancellationToken);
     }
@@ -36,7 +37,8 @@ public class ServiceOrderRepository : IServiceOrderReadOnlyRepository, IServiceO
         return await _context.ServiceOrders
             .AsNoTracking()
             .Where(o => o.CustomerId == customerId && o.Status != excludedStatus)
-            .OrderBy(o => o.CreatedAt)
+            .OrderBy(o => o.Status)
+            .ThenBy(o => o.CreatedAt)
             .ThenBy(o => o.Id)
             .ToListAsync(cancellationToken);
     }
