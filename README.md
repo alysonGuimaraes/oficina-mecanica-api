@@ -57,7 +57,7 @@ flowchart LR
     LB --> Pods[Deployment autogarage-api<br/>1 a 2 réplicas via HPA]
     Pods -->|IP privado, VPC| SQL[(Cloud SQL<br/>PostgreSQL 15)]
     CM[ConfigMap<br/>valores não sensíveis] -.-> Pods
-    SEC[Secret<br/>conexão, chave JWT, pepper, admin] -.-> Pods
+    SEC[Secret<br/>conexão, chave JWT, pepper, admin, API key do Brevo] -.-> Pods
 
     subgraph GCP
         subgraph VPC
@@ -91,7 +91,7 @@ O estado do Terraform fica em um bucket GCS. A documentação detalhada está em
 - **Deployment** `autogarage-api-deployment`: porta 8080, probes de readiness e liveness em `/health`, execução sem root e com sistema de arquivos somente leitura.
 - **Service** `autogarage-api-service` do tipo LoadBalancer, porta 80 para 8080.
 - **HPA** `autogarage-api-hpa`: de 1 a 2 réplicas, escalando por CPU e memória (80%).
-- **ConfigMap** `autogarage-api-config` com valores não sensíveis, e **Secret** `autogarage-api-secrets` com a conexão com o banco, a chave JWT, o pepper das senhas e as credenciais do primeiro administrador. Ambos são gerados pelo pipeline de release, e nenhum deles é commitado.
+- **ConfigMap** `autogarage-api-config` com valores não sensíveis, e **Secret** `autogarage-api-secrets` com a conexão com o banco, a chave JWT, o pepper das senhas e as credenciais do primeiro administrador e a API key do Brevo (envio de e-mails). Ambos são gerados pelo pipeline de release, e nenhum deles é commitado.
 
 ### Fluxo de deploy
 
