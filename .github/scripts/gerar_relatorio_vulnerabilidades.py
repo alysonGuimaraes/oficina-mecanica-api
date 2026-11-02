@@ -1,19 +1,26 @@
-"""Gera o relatório de vulnerabilidades em Markdown, com três fontes:
+"""Gera o relatório de vulnerabilidades em Markdown, a partir de três fontes.
 
-1. Dependências NuGet: saída JSON de
-   `dotnet list <solução> package --vulnerable --include-transitive --format json`.
-2. Imagem Docker: saída JSON de `trivy image --format json`.
-3. Configuração: saída JSON de `trivy config --format json` (Dockerfile, Kubernetes e Terraform).
+Os arquivos de entrada e o de saída têm caminhos fixos, relativos à raiz do repositório:
 
-Uso:
-    python gerar_relatorio_vulnerabilidades.py --nuget audit.json --imagem trivy-image.json \
-        --config trivy-config.json --saida <arquivo.md> --commit <sha>
+1. audit.json: saída de `dotnet list <solução> package --vulnerable --include-transitive --format json`.
+2. trivy-image.json: saída de `trivy image --format json`.
+3. trivy-config.json: saída de `trivy config --format json` (Dockerfile, Kubernetes e Terraform).
+
+Saída: docs/seguranca/relatorio-vulnerabilidades.md, sobrescrita a cada execução.
+
+Uso, na raiz do repositório, depois de gerar os três JSON:
+    python .github/scripts/gerar_relatorio_vulnerabilidades.py --commit <sha>
 """
 
 import argparse
 import json
-import sys
 from datetime import datetime, timezone
+from pathlib import Path
+
+NUGET_INPUT = Path("audit.json")
+IMAGE_INPUT = Path("trivy-image.json")
+CONFIG_INPUT = Path("trivy-config.json")
+REPORT_OUTPUT = Path("docs/seguranca/relatorio-vulnerabilidades.md")
 
 # Severidades normalizadas. O NuGet usa "Moderate" e o Trivy usa "MEDIUM": ambos viram "Medium".
 SEVERITY_ORDER = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3, "Unknown": 4}
@@ -173,27 +180,24 @@ def load(path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--nuget", required=True, help="JSON do dotnet list package --vulnerable")
-    parser.add_argument("--imagem", required=True, help="JSON do trivy image")
-    parser.add_argument("--config", required=True, help="JSON do trivy config")
-    parser.add_argument("--saida", required=True, help="arquivo Markdown de saída")
     parser.add_argument("--commit", required=True, help="commit analisado")
     args = parser.parse_args()
 
     report = render(
-        collect_nuget(load(args.nuget)),
-        collect_image(load(args.imagem)),
-        collect_config(load(args.config)),
+        collect_nuget(load(NUGET_INPUT)),
+        collect_image(load(IMAGE_INPUT)),
+        collect_config(load(CONFIG_INPUT)),
         args.commit,
         datetime.now(timezone.utc),
     )
 
-    with open(args.saida, "w", encoding="utf-8", newline="\n") as file:
+    REPORT_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    with REPORT_OUTPUT.open("w", encoding="utf-8", newline="\n") as file:
         file.write(report)
 
-    print(f"Relatório gravado em {args.saida}")
+    print(f"Relatório gravado em {REPORT_OUTPUT}")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
