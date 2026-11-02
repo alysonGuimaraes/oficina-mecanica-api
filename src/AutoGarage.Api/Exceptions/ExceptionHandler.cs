@@ -63,7 +63,7 @@ public class ExceptionHandler : IExceptionHandler
 
     // O tipo do erro usa o scheme e o host da requisição, para apontar para a instância que atendeu.
     private static string BuildErrorTypeUrl(HttpContext httpContext, string errorType) =>
-        $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/scalar/errors/{errorType}";
+        $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/scalar#{errorType}";
 
     private static int ResolveDomainErrorStatusCode(DomainException domainException) => domainException switch
     {

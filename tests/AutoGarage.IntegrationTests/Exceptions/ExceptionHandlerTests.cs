@@ -8,8 +8,8 @@ namespace AutoGarage.IntegrationTests.Exceptions;
 public class ExceptionHandlerTests
 {
     [Theory]
-    [InlineData("https", "oficina.example.com", "https://oficina.example.com/scalar/errors/")]
-    [InlineData("http", "localhost:7169", "http://localhost:7169/scalar/errors/")]
+    [InlineData("https", "oficina.example.com", "https://oficina.example.com/scalar#")]
+    [InlineData("http", "localhost:7169", "http://localhost:7169/scalar#")]
     public async Task TryHandleAsync_DomainError_ShouldBuildTypeFromRequestSchemeAndHost(string scheme, string host, string expectedBase)
     {
         var problemDetailsService = new CapturingProblemDetailsService();
