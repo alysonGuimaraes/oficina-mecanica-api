@@ -8,6 +8,7 @@ Este projeto utiliza **GitHub Actions** para automatizar validação, build, pub
 |---|---|---|---|
 | **CI** | `ci.yml` | `push` para `main` e `pull_request` | Análise estática, restore, format-check, build e testes. |
 | **Infrastructure** | `infra.yml` | `workflow_dispatch` (manual) | Provisão/destruição da infraestrutura via **Terraform** e verificação dos nós do cluster. |
+| **Security report** | `security-report.yml` | `push` para `main` (ignora mudanças só em `docs/seguranca/**`) | Audita dependências NuGet, analisa a imagem e a configuração com Trivy e commita o relatório em `docs/seguranca`, com `[skip ci]`. |
 | **Release** | `release.yml` | `push` de tag `v*` ou `workflow_dispatch` com `tag` | Validação, build/push da imagem no **Artifact Registry**, deploy no **GKE** com aprovação manual via environment `production`. |
 
 ## Fluxo Geral
@@ -42,3 +43,4 @@ Os workflows utilizam **GitHub Environments** e **Secrets/Vars**:
 - [CI Workflow](./ci-workflow.md) - Validação contínua em PRs e pushes
 - [Infrastructure Workflow](./infra-workflow.md) - Provisionamento Terraform e configuração de cluster
 - [Release Workflow](./release-workflow.md) - Build, publicação e deploy com versionamento por tag
+- [Security Report Workflow](./security-report-workflow.md) - Relatório de vulnerabilidades (NuGet, imagem e configuração) commitado em `docs/seguranca`

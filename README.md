@@ -112,7 +112,7 @@ docker compose up --build -d
 curl http://localhost:7169/health
 ```
 
-A API fica em `http://localhost:7169`. Os dados ficam em `tmpfs` e somem com `docker compose down`. O ambiente já vem com clientes, veículos, ordens de serviço e funcionários de teste.
+A API fica em `http://localhost:7169`, e a documentação interativa (Scalar) em `http://localhost:7169/scalar`. Os dados ficam em `tmpfs` e somem com `docker compose down`. O ambiente já vem com clientes, veículos, ordens de serviço e funcionários de teste.
 
 ## Testes
 

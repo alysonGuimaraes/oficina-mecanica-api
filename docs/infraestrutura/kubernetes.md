@@ -91,7 +91,7 @@ cd k8s/overlays/production
 cat > runtime-config.env <<'EOF'
 ASPNETCORE_LOGGING__LOGLEVEL__DEFAULT=Information
 Settings__Jwt__ExpiresInMinutes=15
-Settings__Brevo__Enabled=true
+Settings__Brevo__Enabled=false
 Settings__Brevo__FromEmail=<remetente-verificado>
 Settings__Brevo__FromName=AutoGarage
 EOF
@@ -132,5 +132,8 @@ Depois de aplicar, o `kustomization.yaml` do overlay já tem o bloco `images:` a
 
 - **Sem TLS.** O Service expõe HTTP puro na porta 80. Um Ingress com certificado gerenciado é o próximo passo.
 - **Sem NetworkPolicy.** Qualquer pod do cluster alcança a API.
+- **Redirect para HTTPS sem porta HTTPS.** A aplicação redireciona para HTTPS, mas o Service só expõe a porta 80. O redirect não tem para onde ir enquanto não houver TLS.
+- **Chaves do DataProtection efêmeras.** A aplicação avisa que as chaves não são persistidas. Com uma réplica não há problema, mas com duas réplicas do HPA cada pod tem chaves diferentes. Isso afeta cookies e anti-forgery, não os tokens JWT.
+- **Cloud SQL sem SSL obrigatório.** O Terraform não exige conexão com SSL. O relatório de configuração do Trivy aponta isso (GCP-0015).
 - **Segredos em base64.** Adequado para o escopo do projeto; para um ambiente real, o próximo passo seria um gerenciador externo (Secret Manager com o driver CSI).
 - **Um overlay.** Não há `staging` nem `development` no cluster. O ambiente de desenvolvimento roda com o docker compose.

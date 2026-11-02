@@ -6,7 +6,7 @@ Esta pasta guarda o relatório de vulnerabilidades do projeto.
 
 ## Como o relatório é gerado
 
-O workflow `.github/workflows/security-report.yml` roda a cada push na `main` e analisa três fontes:
+Detalhes do workflow em [Security Report Workflow](../ci-cd/security-report-workflow.md). O workflow `.github/workflows/security-report.yml` roda a cada push na `main` e analisa três fontes:
 
 1. **Dependências NuGet:** `dotnet list package --vulnerable --include-transitive`.
 2. **Imagem Docker:** Trivy sobre a imagem construída a partir do `Dockerfile`.
